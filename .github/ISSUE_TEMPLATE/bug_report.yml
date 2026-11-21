@@ -1,0 +1,61 @@
+name: Bug report
+description: Report reproducible incorrect behavior in the project.
+title: "bug: "
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for providing enough evidence to reproduce and investigate the problem. Remove secrets and sensitive data from all fields.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Briefly describe the problem and its impact.
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior
+      description: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest deterministic sequence that reproduces the issue.
+      placeholder: |
+        1. Run ...
+        2. Provide ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: platform
+    attributes:
+      label: Platform
+      description: Include the operating system, Python version, and agent platform when relevant.
+      placeholder: Windows 11, Python 3.11, Codex CLI
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs or evidence
+      description: Add minimal logs, screenshots, or examples. Remove credentials and sensitive data.
+      render: shell
+    validations:
+      required: false
