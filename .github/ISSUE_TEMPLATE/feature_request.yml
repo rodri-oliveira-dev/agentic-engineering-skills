@@ -1,0 +1,35 @@
+name: Feature request
+description: Propose an improvement grounded in a concrete problem.
+title: "feature: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What limitation or recurring need motivates this proposal?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Suggested solution
+      description: Describe the smallest useful change and how it would work.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Which workarounds or different approaches did you evaluate?
+    validations:
+      required: false
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Expected impact
+      description: Explain affected users, skills, platforms, compatibility, or maintenance costs.
+    validations:
+      required: true
