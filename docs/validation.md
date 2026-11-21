@@ -11,10 +11,10 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-Activate the environment using the command appropriate for the operating system, then validate the canonical catalog:
+Activate the environment using the command appropriate for the operating system, then validate the required canonical catalog:
 
 ```shell
-python scripts/validate_skills.py
+python scripts/validate_skills.py --require-skills
 ```
 
 Useful modes:
@@ -36,9 +36,9 @@ Run all automated tests from the repository root:
 python -m unittest discover -s tests -v
 ```
 
-These commands are intentionally shell-neutral. The `Validate skills` GitHub Actions workflow runs the same commands on Ubuntu with Python 3.11 for pull requests to `main`, pushes to `main`, and manual dispatches.
+These commands are intentionally shell-neutral. The `Validate skills` GitHub Actions workflow runs the automated test suite and required-catalog validation on Ubuntu with Python 3.11 for pull requests to `main`, pushes to `main`, and manual dispatches.
 
-The workflow grants the token read-only repository-content access, uses no secrets, and pins official actions to the full commit SHA corresponding to `actions/checkout@v7.0.0` and `actions/setup-python@v7.0.0`. Its checkout does not persist credentials. During the foundation phase it uses the default empty-catalog behavior; `--require-skills` will be enabled after the first skill is expected to exist.
+The workflow grants the token read-only repository-content access, uses no secrets, and pins official actions to the full commit SHA corresponding to `actions/checkout@v7.0.0` and `actions/setup-python@v7.0.0`. Its checkout does not persist credentials. Because the repository now has implemented skills, CI uses `--require-skills` and fails if the canonical catalog is absent or empty.
 
 ## Results and exit codes
 
@@ -48,7 +48,7 @@ The workflow grants the token read-only repository-content access, uses no secre
 
 Messages include a severity and category. `ERROR [specification]` identifies a violated Agent Skills requirement. `ERROR [structure]` identifies an unusable catalog, file, or local reference. `ERROR [security]` identifies an unsafe path. `WARNING [project-convention]` identifies a portable skill that does not follow an additional repository convention.
 
-An absent or empty `.agents/skills/` is accepted during the foundation phase and reported as **zero skills validated**, not as a passing skill catalog. Use `--require-skills` when the caller expects at least one skill.
+The validator still accepts an absent or empty `.agents/skills/` by default for isolated foundation and test scenarios, reporting **zero skills validated** rather than a passing skill catalog. Repository CI uses `--require-skills` because the canonical catalog must contain implemented skills.
 
 ## Quality levels
 
@@ -73,7 +73,7 @@ The validator emits warnings for deterministic conventions that do not determine
 
 ### Behavioral quality
 
-Structural validation does not demonstrate that an agent activates a skill correctly, follows its workflow, produces a good response, detects real defects, or avoids invented results. Those properties require human review and controlled tests using supported agents. Behavioral evaluation will be expanded in later phases.
+Structural validation does not demonstrate that an agent activates a skill correctly, follows its workflow, produces a good response, detects real defects, or avoids invented results. Representative scenarios under `tests/fixtures/<skill>/scenarios.md` document inputs and expected behavior for later controlled evaluation; they are not executed by `unittest` or CI and must not be reported as passing behavioral tests. Those properties require human review and controlled tests using supported agents.
 
 ## YAML and the reference validator
 
