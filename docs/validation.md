@@ -65,7 +65,7 @@ The validator automatically checks:
 - local Markdown links and reference-style link definitions;
 - missing local targets, non-portable separators, absolute paths, traversal outside the skill, and escaping symlinks.
 
-HTTP, HTTPS, and email targets are deliberately not fetched. URL availability and Markdown fragments are not validated, so execution remains deterministic and offline.
+Link-shaped text inside fenced or inline Markdown code is treated as an example rather than a reference. HTTP, HTTPS, and email targets are deliberately not fetched. URL availability and Markdown fragments are not validated, so execution remains deterministic and offline.
 
 ### Internal conventions
 

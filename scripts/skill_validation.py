@@ -28,6 +28,7 @@ INLINE_LINK = re.compile(
     r"!?\[[^\]]*\]\(\s*(?:<(?P<angle>[^>]+)>|(?P<plain>[^\s)]+))"
 )
 REFERENCE_LINK = re.compile(r"^\s{0,3}\[[^\]]+\]:\s*(?:<(?P<angle>[^>]+)>|(?P<plain>\S+))", re.MULTILINE)
+FENCE_START = re.compile(r"^ {0,3}(?P<fence>`{3,}|~{3,}).*$")
 EXTERNAL_SCHEMES = {"http", "https", "mailto"}
 
 
@@ -323,8 +324,6 @@ def _markdown_files(skill_dir: Path, issues: list[Issue]) -> Iterable[Path]:
 
         for filename in files:
             candidate = current_path / filename
-            if candidate.suffix.lower() != ".md":
-                continue
             resolved = candidate.resolve()
             if not _is_within(resolved, boundary):
                 _issue(
@@ -332,13 +331,67 @@ def _markdown_files(skill_dir: Path, issues: list[Issue]) -> Iterable[Path]:
                     "error",
                     "security",
                     candidate,
-                    "symlinked Markdown file escapes the skill directory",
+                    "symlinked file escapes the skill directory",
                 )
+                continue
+            if candidate.suffix.lower() != ".md":
                 continue
             yield candidate
 
 
+def _strip_inline_code(content: str) -> str:
+    """Replace complete CommonMark-style code spans while preserving line breaks."""
+    output: list[str] = []
+    position = 0
+    while opening := re.search(r"`+", content[position:]):
+        start = position + opening.start()
+        delimiter = opening.group(0)
+        closing_pattern = re.compile(rf"(?<!`){re.escape(delimiter)}(?!`)")
+        closing = closing_pattern.search(content, start + len(delimiter))
+        if closing is None:
+            break
+        end = closing.end()
+        output.append(content[position:start])
+        output.append(
+            "".join("\n" if character == "\n" else " " for character in content[start:end])
+        )
+        position = end
+    output.append(content[position:])
+    return "".join(output)
+
+
+def _markdown_without_code(content: str) -> str:
+    """Remove fenced and inline code before extracting links."""
+    output: list[str] = []
+    fence_character: str | None = None
+    fence_length = 0
+
+    for line in content.splitlines():
+        if fence_character is not None:
+            closing = re.match(
+                rf"^ {{0,3}}{re.escape(fence_character)}{{{fence_length},}}[ \t]*$",
+                line,
+            )
+            if closing:
+                fence_character = None
+                fence_length = 0
+            output.append("")
+            continue
+
+        opening = FENCE_START.match(line)
+        if opening:
+            fence = opening.group("fence")
+            fence_character = fence[0]
+            fence_length = len(fence)
+            output.append("")
+        else:
+            output.append(line)
+
+    return _strip_inline_code("\n".join(output))
+
+
 def _link_targets(content: str) -> Iterable[str]:
+    content = _markdown_without_code(content)
     for pattern in (INLINE_LINK, REFERENCE_LINK):
         for match in pattern.finditer(content):
             yield match.group("angle") or match.group("plain")

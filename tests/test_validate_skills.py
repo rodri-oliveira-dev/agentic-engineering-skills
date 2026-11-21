@@ -131,6 +131,33 @@ class ValidatorTests(unittest.TestCase):
 
         self.assertIn("local link target does not exist", self.messages(report))
 
+    def test_markdown_code_examples_are_not_links(self) -> None:
+        skill = write_skill(
+            self.catalog,
+            "code-examples",
+            body="""# Instructions
+
+Read the [real reference](references/real.md).
+
+`[Inline example](missing-inline.md)`
+
+`[Multiline inline example](
+missing-multiline.md)`
+
+```markdown
+[Fenced example](missing-fenced.md)
+[reference-example]: missing-reference.md
+```
+""",
+        )
+        references = skill / "references"
+        references.mkdir()
+        (references / "real.md").write_text("# Real reference\n", encoding="utf-8")
+
+        report = validate_catalog(self.catalog)
+
+        self.assertEqual([], report.errors)
+
     def test_reference_cannot_escape_skill_directory(self) -> None:
         write_skill(
             self.catalog,
@@ -200,6 +227,24 @@ class ValidatorTests(unittest.TestCase):
 
         self.assertEqual([], report.errors)
         self.assertFalse(marker.exists())
+
+    def test_supporting_file_symlink_cannot_escape_skill_directory(self) -> None:
+        skill = write_skill(self.catalog, "unsafe-symlink")
+        scripts = skill / "scripts"
+        scripts.mkdir()
+        outside = Path(self.temporary_directory.name) / "outside.py"
+        outside.write_text("print('outside')\n", encoding="utf-8")
+        link = scripts / "helper.py"
+        try:
+            link.symlink_to(outside)
+        except OSError as exc:
+            self.skipTest(f"file symlinks are unavailable: {exc}")
+
+        report = validate_catalog(self.catalog)
+
+        security_errors = [issue for issue in report.errors if issue.category == "security"]
+        self.assertTrue(security_errors)
+        self.assertIn("symlinked file escapes", self.messages(report))
 
     def test_unicode_spec_name_produces_project_warning_only(self) -> None:
         write_skill(self.catalog, "revisão")
