@@ -117,9 +117,19 @@ def _source_files(skill_directory: Path) -> dict[str, Path]:
 
 
 def _select_skills(catalog: Path, selected_skill: str | None) -> list[Path]:
+    catalog = catalog.expanduser()
+    if catalog.is_symlink():
+        raise InstallError(f"canonical catalog must not be a symlink: {catalog}")
     catalog = catalog.resolve()
     if not catalog.is_dir():
         raise InstallError(f"canonical catalog does not exist: {catalog}")
+
+    entries = sorted(catalog.iterdir(), key=lambda item: item.name)
+    for entry in entries:
+        if entry.is_symlink():
+            raise InstallError(f"canonical catalog contains a symlink: {entry}")
+        if not entry.is_dir():
+            raise InstallError(f"canonical catalog contains a non-skill entry: {entry}")
 
     if selected_skill is not None:
         if not SKILL_NAME.fullmatch(selected_skill):
@@ -135,11 +145,7 @@ def _select_skills(catalog: Path, selected_skill: str | None) -> list[Path]:
             raise InstallError(f"skill escapes canonical catalog: {selected_skill}")
         return [skill]
 
-    skills = [
-        path
-        for path in sorted(catalog.iterdir(), key=lambda item: item.name)
-        if path.is_dir() and not path.is_symlink()
-    ]
+    skills = entries
     if not skills:
         raise InstallError(f"canonical catalog is empty: {catalog}")
     for skill in skills:
@@ -159,6 +165,15 @@ def _empty_manifest(platform: str) -> dict[str, Any]:
     }
 
 
+def _unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise InstallError(f"managed manifest contains duplicate key: {key!r}")
+        result[key] = value
+    return result
+
+
 def _validate_manifest_file_path(skill_name: str, value: object) -> str:
     if not isinstance(value, str) or not value or "\\" in value:
         raise InstallError(f"manifest contains an invalid path for skill {skill_name!r}")
@@ -175,7 +190,10 @@ def _load_manifest(destination: Path, platform: str) -> dict[str, Any]:
     if manifest_path.is_symlink() or not manifest_path.is_file():
         raise InstallError(f"managed manifest is not a regular file: {manifest_path}")
     try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest = json.loads(
+            manifest_path.read_text(encoding="utf-8"),
+            object_pairs_hook=_unique_json_object,
+        )
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise InstallError(f"cannot read managed manifest {manifest_path}: {exc}") from exc
     if not isinstance(manifest, dict):
@@ -201,6 +219,10 @@ def _load_manifest(destination: Path, platform: str) -> dict[str, Any]:
     for skill_name, skill_record in skills.items():
         if not isinstance(skill_name, str) or not SKILL_NAME.fullmatch(skill_name):
             raise InstallError(f"managed manifest contains an invalid skill name: {skill_name!r}")
+        if skill_name in CLAUDE_CODE_RESERVED_NAMES:
+            raise InstallError(
+                f"managed manifest contains a name reserved by Claude Code: {skill_name!r}"
+            )
         if not isinstance(skill_record, dict) or set(skill_record) != {"files"}:
             raise InstallError(f"managed manifest has an invalid record for skill {skill_name!r}")
         files = skill_record["files"]
@@ -266,7 +288,10 @@ def install_skills(
     if platform not in SUPPORTED_PLATFORMS:
         raise InstallError(f"unsupported platform: {platform}")
 
-    destination = destination.expanduser().resolve(strict=False)
+    destination = destination.expanduser()
+    if destination.is_symlink():
+        raise InstallError(f"destination must not be a symlink: {destination}")
+    destination = destination.resolve(strict=False)
     if destination.exists() and (destination.is_symlink() or not destination.is_dir()):
         raise InstallError(f"destination is not a regular directory: {destination}")
 
@@ -371,7 +396,10 @@ def uninstall_skills(
             "skill name must use lowercase ASCII letters, digits, and single hyphens"
         )
 
-    destination = destination.expanduser().resolve(strict=False)
+    destination = destination.expanduser()
+    if destination.is_symlink():
+        raise InstallError(f"destination must not be a symlink: {destination}")
+    destination = destination.resolve(strict=False)
     if not destination.exists():
         return InstallResult(())
     if destination.is_symlink() or not destination.is_dir():

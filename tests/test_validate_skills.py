@@ -102,6 +102,36 @@ class ValidatorTests(unittest.TestCase):
 
         self.assertIn("missing required field 'description'", self.messages(report))
 
+    def test_rejects_unsupported_or_invalid_optional_metadata(self) -> None:
+        cases = {
+            "unsupported-field": (
+                "name: unsupported-field\ndescription: Use for a task.\ntrigger: always",
+                "unsupported frontmatter field",
+            ),
+            "invalid-tools": (
+                "name: invalid-tools\ndescription: Use for a task.\nallowed-tools: [Read]",
+                "field 'allowed-tools' must be a string",
+            ),
+            "invalid-nested-metadata": (
+                "name: invalid-nested-metadata\ndescription: Use for a task.\nmetadata:\n  version: 1",
+                "mapping of string keys to string values",
+            ),
+        }
+        for directory, (frontmatter, expected) in cases.items():
+            with self.subTest(directory=directory):
+                write_skill(self.catalog, directory, frontmatter=frontmatter)
+
+                report = validate_catalog(self.catalog, selected_skill=directory)
+
+                self.assertIn(expected, self.messages(report))
+
+    def test_requires_instructions_after_frontmatter(self) -> None:
+        write_skill(self.catalog, "empty-instructions", body="")
+
+        report = validate_catalog(self.catalog)
+
+        self.assertIn("must contain Markdown instructions", self.messages(report))
+
     def test_invalid_name_pattern(self) -> None:
         write_skill(self.catalog, "Bad_Name", name="Bad_Name")
 
@@ -187,6 +217,26 @@ missing-multiline.md)`
         self.assertTrue(security_errors)
         self.assertIn("escapes the skill directory", self.messages(report))
 
+    def test_unsupported_link_scheme_is_rejected(self) -> None:
+        write_skill(
+            self.catalog,
+            "unsafe-link",
+            body="# Instructions\n\nOpen [payload](javascript:alert(1)).",
+        )
+
+        report = validate_catalog(self.catalog)
+
+        self.assertIn("unsupported URI scheme", self.messages(report))
+        self.assertTrue(any(issue.category == "security" for issue in report.errors))
+
+    def test_catalog_rejects_non_skill_entries(self) -> None:
+        (self.catalog / "README.md").write_text("not a skill\n", encoding="utf-8")
+
+        report = validate_catalog(self.catalog)
+
+        self.assertIn("only skill directories are allowed", self.messages(report))
+        self.assertTrue(any(issue.category == "structure" for issue in report.errors))
+
     def test_empty_catalog_is_allowed_by_default(self) -> None:
         report = validate_catalog(self.catalog)
 
@@ -260,7 +310,48 @@ missing-multiline.md)`
 
         security_errors = [issue for issue in report.errors if issue.category == "security"]
         self.assertTrue(security_errors)
-        self.assertIn("symlinked file escapes", self.messages(report))
+        self.assertIn("symlinked files are not allowed", self.messages(report))
+
+    def test_internal_symlink_is_rejected_as_not_distributable(self) -> None:
+        skill = write_skill(self.catalog, "internal-symlink")
+        target = skill / "details.txt"
+        target.write_text("details\n", encoding="utf-8")
+        link = skill / "alias.txt"
+        try:
+            link.symlink_to(target)
+        except OSError as exc:
+            self.skipTest(f"file symlinks are unavailable: {exc}")
+
+        report = validate_catalog(self.catalog)
+
+        self.assertIn("symlinked files are not allowed", self.messages(report))
+
+    def test_catalog_skill_symlink_is_rejected(self) -> None:
+        real_skill = Path(self.temporary_directory.name) / "real-skill"
+        write_skill(real_skill.parent, real_skill.name)
+        link = self.catalog / "linked-skill"
+        try:
+            link.symlink_to(real_skill, target_is_directory=True)
+        except OSError as exc:
+            self.skipTest(f"directory symlinks are unavailable: {exc}")
+
+        report = validate_catalog(self.catalog)
+
+        self.assertIn("catalog entries must be regular skill directories", self.messages(report))
+
+    def test_catalog_root_symlink_is_rejected(self) -> None:
+        real_catalog = Path(self.temporary_directory.name) / "real-catalog"
+        write_skill(real_catalog, "testing")
+        linked_catalog = Path(self.temporary_directory.name) / "linked-catalog"
+        try:
+            linked_catalog.symlink_to(real_catalog, target_is_directory=True)
+        except OSError as exc:
+            self.skipTest(f"directory symlinks are unavailable: {exc}")
+
+        report = validate_catalog(linked_catalog)
+
+        self.assertIn("catalog root must be a regular directory", self.messages(report))
+        self.assertTrue(any(issue.category == "security" for issue in report.errors))
 
     def test_unicode_spec_name_produces_project_warning_only(self) -> None:
         write_skill(self.catalog, "revisão")
