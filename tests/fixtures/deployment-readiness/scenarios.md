@@ -145,3 +145,15 @@ These synthetic scenarios support controlled human or agent evaluation of `.agen
 **Prohibited conclusions:** Do not hide the risk, call the release unconditionally READY, or make every known dependency issue a blocker.
 
 **Evaluation criteria:** The residual risk is concrete and operable, cannot invalidate a critical condition, and is reported with trigger, impact, mitigation, detection, and recovery.
+
+## 13. Deployment execution without an assessment request
+
+**Input:** A separately authorized operator asks only to execute an already approved deployment runbook. No readiness review or go/no-go assessment is requested.
+
+**Expected state:** The deployment-readiness skill is not selected as the primary execution workflow. Existing approval is not silently reissued or replaced by a new assessment.
+
+**Required evidence:** The request boundary, existing approval, exact runbook, target, and operational authorization are inputs to the appropriate deployment mechanism, not evidence of a newly performed readiness review.
+
+**Prohibited conclusions:** Do not claim a fresh READY decision, broaden the runbook, or confuse assessment with execution.
+
+**Evaluation criteria:** The agent routes the execution request appropriately and does not imply that this fixture authorizes a real deployment.

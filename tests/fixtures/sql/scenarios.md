@@ -121,3 +121,15 @@ These scenarios support controlled human or agent evaluation of `.agents/skills/
 **Minimum evidence:** Before-and-after SQL, join and filter placement, null-extension behavior for the actual DBMS, result contract, and a data case with no related row.
 
 **Behavioral criteria:** Correctness precedes optimization; equivalence tests include multiplicity, nulls, values, and ordering promises before performance is compared.
+
+## 11. Application change without relational data concerns
+
+**Input:** Ask to change the color and spacing of a static navigation component. The supplied scope contains no query, relational model, transaction, migration, or database interaction.
+
+**Expected findings:** The SQL skill is not activated. The request is routed to the relevant application workflow without unsolicited schema or query advice.
+
+**Prohibited recommendations:** Do not invent a database dependency, propose persistence changes, or delay the UI work for an unrelated SQL review.
+
+**Minimum evidence:** The stated scope is sufficient to show that no relational database concern is involved.
+
+**Behavioral criteria:** Skill routing respects scope and produces no SQL analysis.
