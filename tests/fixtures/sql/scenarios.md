@@ -52,7 +52,7 @@ These scenarios support controlled human or agent evaluation of `.agents/skills/
 
 ## 5. Unstable pagination
 
-**Input:** A paginated query orders only by non-unique `created_at`; multiple rows share timestamps and rows can be inserted between page requests. Consumers require stable forward traversal without duplicates.
+**Input:** An offset-paginated query orders only by non-unique `created_at`; multiple rows share timestamps and rows can be inserted between page requests. Consumers require stable forward traversal without duplicates.
 
 **Expected findings:** A correctness risk from nondeterministic ordering and offset movement, plus a stable unique tie-breaker and a conditional comparison of offset and keyset approaches.
 

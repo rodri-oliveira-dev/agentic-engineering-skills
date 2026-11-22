@@ -52,7 +52,7 @@ These scenarios support controlled human or agent evaluation of `.agents/skills/
 
 ## 5. Unsafe query
 
-**Input:** A diff replaces a parameterized repository query with SQL that interpolates an HTTP parameter. The endpoint is reachable and no query builder or driver binding occurs later.
+**Input:** A diff replaces a parameterized repository query with SQL that interpolates attacker-controlled text from an HTTP parameter. The endpoint is reachable, no effective validation constrains the value to a grammar that cannot alter SQL structure, and no query builder or driver binding occurs later.
 
 **Expected findings:** One security defect tracing untrusted input into SQL structure and recommending parameter binding.
 
