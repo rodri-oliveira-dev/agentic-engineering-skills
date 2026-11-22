@@ -40,10 +40,34 @@ def documentation_files() -> list[Path]:
     return root_files + sorted((REPOSITORY_ROOT / "docs").rglob("*.md"))
 
 
+def without_fenced_code(markdown: str) -> str:
+    output: list[str] = []
+    fence_character: str | None = None
+    fence_length = 0
+    for line in markdown.splitlines():
+        if fence_character is not None:
+            if re.match(
+                rf"^ {{0,3}}{re.escape(fence_character)}{{{fence_length},}}[ \t]*$",
+                line,
+            ):
+                fence_character = None
+                fence_length = 0
+            continue
+        opening = re.match(r"^ {0,3}(?P<fence>`{3,}|~{3,}).*$", line)
+        if opening:
+            fence = opening.group("fence")
+            fence_character = fence[0]
+            fence_length = len(fence)
+            continue
+        output.append(line)
+    return "\n".join(output)
+
+
 def heading_anchors(markdown: str) -> set[str]:
     anchors: set[str] = set()
     occurrences: dict[str, int] = {}
-    for heading in re.findall(r"^#{1,6}\s+(.+?)\s*#*\s*$", markdown, re.MULTILINE):
+    rendered = without_fenced_code(markdown)
+    for heading in re.findall(r"^#{1,6}\s+(.+?)\s*#*\s*$", rendered, re.MULTILINE):
         plain = re.sub(r"\[([^]]+)\]\([^)]+\)", r"\1", heading)
         plain = plain.replace("`", "").strip().lower()
         anchor = re.sub(r"[^\w\- ]", "", plain, flags=re.UNICODE).replace(" ", "-")
@@ -114,6 +138,24 @@ class DocumentationTests(unittest.TestCase):
                 for option in required:
                     self.assertIn(option, content)
                 self.assertNotIn("--scope", content)
+
+    def test_readme_setup_uses_the_created_virtual_environment(self) -> None:
+        for name in ("README.md", "README.pt-BR.md"):
+            with self.subTest(readme=name):
+                content = (REPOSITORY_ROOT / name).read_text(encoding="utf-8")
+                self.assertIn(".venv/bin/python -m pip install", content)
+                self.assertIn(".venv\\Scripts\\python.exe -m pip install", content)
+                self.assertNotRegex(
+                    content,
+                    re.compile(r"^python -m pip install -r requirements\.txt$", re.MULTILINE),
+                )
+
+    def test_fenced_example_is_not_a_heading_anchor(self) -> None:
+        example_only = "[jump](#ghost)\n\n```markdown\n# Ghost\n```\n"
+        with_real_heading = example_only + "\n# Ghost\n"
+
+        self.assertNotIn("ghost", heading_anchors(example_only))
+        self.assertIn("ghost", heading_anchors(with_real_heading))
 
 
 if __name__ == "__main__":

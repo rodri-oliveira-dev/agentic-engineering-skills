@@ -218,16 +218,32 @@ missing-multiline.md)`
         self.assertIn("escapes the skill directory", self.messages(report))
 
     def test_unsupported_link_scheme_is_rejected(self) -> None:
+        for name, target in (
+            ("script-link", "javascript:alert(1)"),
+            ("ftp-link", "ftp://example.invalid/file"),
+        ):
+            with self.subTest(target=target):
+                write_skill(
+                    self.catalog,
+                    name,
+                    body=f"# Instructions\n\nOpen [payload]({target}).",
+                )
+
+                report = validate_catalog(self.catalog, selected_skill=name)
+
+                self.assertIn("unsupported URI scheme", self.messages(report))
+                self.assertTrue(any(issue.category == "security" for issue in report.errors))
+
+    def test_scheme_relative_external_link_is_allowed(self) -> None:
         write_skill(
             self.catalog,
-            "unsafe-link",
-            body="# Instructions\n\nOpen [payload](javascript:alert(1)).",
+            "external-link",
+            body="# Instructions\n\nOpen [documentation](//example.invalid/docs).",
         )
 
         report = validate_catalog(self.catalog)
 
-        self.assertIn("unsupported URI scheme", self.messages(report))
-        self.assertTrue(any(issue.category == "security" for issue in report.errors))
+        self.assertEqual([], report.errors)
 
     def test_catalog_rejects_non_skill_entries(self) -> None:
         (self.catalog / "README.md").write_text("not a skill\n", encoding="utf-8")

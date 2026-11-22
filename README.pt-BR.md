@@ -31,10 +31,26 @@ As ferramentas do repositório exigem Python 3.11 ou superior. O validador usa a
 git clone https://github.com/rodri-oliveira-dev/agentic-engineering-skills.git
 cd agentic-engineering-skills
 python -m venv .venv
-python -m pip install -r requirements.txt
-python scripts/validate_skills.py --require-skills
-python -m unittest discover -s tests -v
-python scripts/evaluate_scenarios.py check
+```
+
+Use o interpretador do ambiente virtual para instalar dependências e executar as validações.
+
+Linux e macOS:
+
+```shell
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python scripts/validate_skills.py --require-skills
+.venv/bin/python -m unittest discover -s tests -v
+.venv/bin/python scripts/evaluate_scenarios.py check
+```
+
+Windows PowerShell:
+
+```powershell
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe scripts/validate_skills.py --require-skills
+.venv\Scripts\python.exe -m unittest discover -s tests -v
+.venv\Scripts\python.exe scripts/evaluate_scenarios.py check
 ```
 
 Comandos de ativação pertencem às plataformas, não são opções de CLI deste repositório:

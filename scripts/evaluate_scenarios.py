@@ -110,6 +110,10 @@ def load_scenarios(fixtures: Path) -> dict[str, dict[int, Scenario]]:
                 raise EvaluationError(f"scenario {skill}#{number} has no non-empty Input field")
             if len(fields) < 2:
                 raise EvaluationError(f"scenario {skill}#{number} has no evaluation expectations")
+            if any(not value for label, value in fields.items() if label != "Input"):
+                raise EvaluationError(
+                    f"scenario {skill}#{number} has an empty evaluation expectation"
+                )
             skill_scenarios[number] = Scenario(
                 skill, number, heading.group(2).strip(), source, markdown, fields
             )
@@ -214,7 +218,12 @@ def validate_record(record: Any, scenarios: dict[str, dict[int, Scenario]]) -> N
     if not isinstance(identity, dict):
         raise EvaluationError("evaluation record has no scenario identity")
     skill, number = identity.get("skill"), identity.get("number")
-    if skill not in scenarios or not isinstance(number, int) or number not in scenarios[skill]:
+    if (
+        not isinstance(skill, str)
+        or skill not in scenarios
+        or not isinstance(number, int)
+        or number not in scenarios[skill]
+    ):
         raise EvaluationError("evaluation record references an unknown scenario")
     scenario = scenarios[skill][number]
     if identity.get("source_sha256") != scenario.digest:
@@ -222,7 +231,7 @@ def validate_record(record: Any, scenarios: dict[str, dict[int, Scenario]]) -> N
     if identity.get("title") != scenario.title or identity.get("input") != scenario.fields["Input"]:
         raise EvaluationError(f"evaluation record for {skill}#{number} changed the fixture input")
     status = record.get("status")
-    if status not in {"pending", "completed"}:
+    if not isinstance(status, str) or status not in {"pending", "completed"}:
         raise EvaluationError("evaluation status must be 'pending' or 'completed'")
     criteria = record.get("criteria")
     if not isinstance(criteria, list) or not criteria:
@@ -261,11 +270,11 @@ def validate_record(record: Any, scenarios: dict[str, dict[int, Scenario]]) -> N
     ):
         raise EvaluationError("completed evaluation cannot finish before it starts")
     for item in criteria:
-        if not isinstance(item, dict) or item.get("outcome") not in {
-            "met",
-            "not_met",
-            "not_applicable",
-        }:
+        if (
+            not isinstance(item, dict)
+            or not isinstance(item.get("outcome"), str)
+            or item["outcome"] not in {"met", "not_met", "not_applicable"}
+        ):
             raise EvaluationError("completed evaluation has an unassessed criterion")
         if not isinstance(item.get("evidence"), str) or not item["evidence"].strip():
             raise EvaluationError("completed evaluation criteria require evidence")

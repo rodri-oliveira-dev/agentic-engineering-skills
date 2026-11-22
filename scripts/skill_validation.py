@@ -424,7 +424,7 @@ def _validate_local_links(skill_dir: Path, issues: list[Issue]) -> None:
             except ValueError as exc:
                 _issue(issues, "error", "structure", markdown_file, f"invalid link target {target!r}: {exc}")
                 continue
-            if parsed.scheme.lower() in EXTERNAL_SCHEMES or parsed.netloc:
+            if parsed.scheme.lower() in EXTERNAL_SCHEMES:
                 continue
             if parsed.scheme:
                 if parsed.scheme.lower() == "file" or len(parsed.scheme) == 1:
@@ -443,6 +443,8 @@ def _validate_local_links(skill_dir: Path, issues: list[Issue]) -> None:
                         markdown_file,
                         f"link uses an unsupported URI scheme: {target!r}",
                     )
+                continue
+            if parsed.netloc:
                 continue
 
             local_part = unquote(parsed.path)
