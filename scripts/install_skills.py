@@ -305,7 +305,7 @@ def install_skills(
     for skill_directory in selected:
         skill_name = skill_directory.name
         relative_skill = Path(skill_name)
-        target_skill = _safe_target(destination, relative_skill)
+        target_skill = destination / relative_skill
         existing_record = manifest["skills"].get(skill_name)
         if existing_record is None and _path_exists(target_skill):
             raise InstallError(
@@ -315,6 +315,7 @@ def install_skills(
             target_skill.is_symlink() or not target_skill.is_dir()
         ):
             raise InstallError(f"managed skill path is not a regular directory: {target_skill}")
+        target_skill = _safe_target(destination, relative_skill)
 
         sources = _source_files(skill_directory)
         source_hashes = {relative: _sha256(path) for relative, path in sources.items()}
