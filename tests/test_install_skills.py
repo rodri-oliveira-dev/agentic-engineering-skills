@@ -229,7 +229,7 @@ class InstallerTests(unittest.TestCase):
         self.destination.mkdir(parents=True)
         link = self.destination / "testing"
         try:
-            link.symlink_to(self.root / "missing-target", target_is_directory=True)
+            link.symlink_to(self.destination / "missing-target", target_is_directory=True)
         except OSError as exc:
             self.skipTest(f"directory symlinks are unavailable: {exc}")
 
