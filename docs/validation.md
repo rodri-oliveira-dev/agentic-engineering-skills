@@ -36,6 +36,12 @@ Run all automated tests from the repository root:
 python -m unittest discover -s tests -v
 ```
 
+Preview a generated Claude Code distribution without writing it:
+
+```shell
+python scripts/install_skills.py --platform claude-code --destination path/to/project/.claude/skills --all --dry-run
+```
+
 These commands are intentionally shell-neutral. The `Validate skills` GitHub Actions workflow runs the automated test suite and required-catalog validation on Ubuntu with Python 3.11 for pull requests to `main`, pushes to `main`, and manual dispatches.
 
 The workflow grants the token read-only repository-content access, uses no secrets, and pins official actions to the full commit SHA corresponding to `actions/checkout@v7.0.0` and `actions/setup-python@v7.0.0`. Its checkout does not persist credentials. Because the repository now has implemented skills, CI uses `--require-skills` and fails if the canonical catalog is absent or empty.
@@ -65,6 +71,10 @@ The validator automatically checks:
 - local Markdown links and reference-style link definitions;
 - missing local targets, non-portable separators, absolute paths, traversal outside the skill, and escaping symlinks.
 
+The automated suite also applies these checks to the real canonical catalog, asserts the preserved ten-skill inventory, requires the stricter ASCII kebab-case project convention without warnings, and verifies that no independent `.github/skills/` tree has been introduced. Together these checks cover the format and project location shared by Codex and Copilot. They do not launch either agent host.
+
+Installer tests use temporary directories to exercise complete and single-skill distributions, nested supporting files, dry runs, repeat installation, managed updates, safe removal, path traversal rejection, and conflicts with unmanaged or locally modified files. They do not require or launch Claude Code.
+
 Link-shaped text inside fenced or inline Markdown code is treated as an example rather than a reference. HTTP, HTTPS, and email targets are deliberately not fetched. URL availability and Markdown fragments are not validated, so execution remains deterministic and offline.
 
 ### Internal conventions
@@ -73,7 +83,7 @@ The validator emits warnings for deterministic conventions that do not determine
 
 ### Behavioral quality
 
-Structural validation does not demonstrate that an agent activates a skill correctly, follows its workflow, produces a good response, detects real defects, or avoids invented results. Representative scenarios under `tests/fixtures/<skill>/scenarios.md` document inputs and expected behavior for later controlled evaluation; they are not executed by `unittest` or CI and must not be reported as passing behavioral tests. Those properties require human review and controlled tests using supported agents.
+Structural validation does not demonstrate that an agent discovers or activates a skill correctly, follows its workflow, produces a good response, detects real defects, or avoids invented results. Representative scenarios under `tests/fixtures/<skill>/scenarios.md` document inputs and expected behavior for later controlled evaluation; they are not executed by `unittest` or CI and must not be reported as passing behavioral tests. Those properties require human review and controlled tests using supported agents. Passing compatibility and installer checks establish structural compatibility and safe distribution for Copilot and Claude Code, not verified execution on either platform.
 
 ## YAML and the reference validator
 

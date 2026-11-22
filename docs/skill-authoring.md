@@ -131,5 +131,6 @@ Run the structural validator and test suite as described in [Validation and test
 
 - [Agent Skills specification](https://agentskills.io/specification)
 - [OpenAI: Build skills](https://developers.openai.com/codex/skills)
-- [GitHub Copilot: Agent skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills)
+- [GitHub Copilot: Agent skills](https://docs.github.com/en/copilot/concepts/customizations/agent-skills)
+- [GitHub Copilot: Add agent skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills)
 - [Claude Code: Extend Claude with skills](https://code.claude.com/docs/en/skills)
