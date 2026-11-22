@@ -45,10 +45,12 @@ The responsibility statements are initial boundaries and will be refined during 
 
 ### 4. Copilot and Claude compatibility
 
-- Test canonical discovery and behavior across intended Copilot surfaces.
-- Implement and test a non-duplicating adapter for Claude Code's discovery location.
+- **Copilot structural compatibility complete:** the canonical directory is officially supported, the catalog has been audited against the shared structure, and regression tests prevent a duplicated `.github/skills/` tree.
+- Test canonical discovery, activation, and behavior across intended Copilot surfaces.
+- **Claude structural distribution complete:** a tested Python installer generates `.claude/skills/` from the canonical catalog, preserves supporting files, and protects unmanaged or modified content.
+- Test discovery, activation, and behavior across intended Claude Code surfaces.
 - Isolate platform-specific extensions and document any behavioral differences.
-- Publish an evidence-based compatibility matrix.
+- **Compatibility matrix published:** record official support, structural evidence, runtime checks, and limitations separately; update it as controlled platform testing becomes available.
 
 ### 5. Version 1.0 publication
 

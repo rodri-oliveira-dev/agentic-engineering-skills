@@ -6,11 +6,27 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import yaml
+
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIRECTORY = REPOSITORY_ROOT / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIRECTORY))
 
-from skill_validation import validate_catalog  # noqa: E402
+from skill_validation import ALLOWED_FIELDS, validate_catalog  # noqa: E402
+
+
+CANONICAL_SKILLS = {
+    "api-design",
+    "code-review",
+    "commits",
+    "debug",
+    "deployment-readiness",
+    "docs",
+    "refactor",
+    "security-review",
+    "sql",
+    "testing",
+}
 
 
 def write_skill(
@@ -253,6 +269,53 @@ missing-multiline.md)`
 
         self.assertEqual([], report.errors)
         self.assertTrue(any(issue.category == "project-convention" for issue in report.warnings))
+
+
+class CanonicalCatalogCompatibilityTests(unittest.TestCase):
+    def test_canonical_catalog_meets_shared_codex_and_copilot_structure(self) -> None:
+        catalog = REPOSITORY_ROOT / ".agents" / "skills"
+
+        report = validate_catalog(catalog, require_skills=True)
+
+        self.assertEqual([], report.errors)
+        self.assertEqual([], report.warnings)
+        self.assertEqual(CANONICAL_SKILLS, {skill.name for skill in report.skills})
+
+    def test_canonical_frontmatter_uses_portable_agent_skills_metadata(self) -> None:
+        catalog = REPOSITORY_ROOT / ".agents" / "skills"
+
+        for skill_md in sorted(catalog.glob("*/SKILL.md")):
+            with self.subTest(skill=skill_md.parent.name):
+                content = skill_md.read_text(encoding="utf-8").splitlines()
+                closing_delimiter = content.index("---", 1)
+                metadata = yaml.safe_load("\n".join(content[1:closing_delimiter]))
+
+                self.assertLessEqual(set(metadata), ALLOWED_FIELDS)
+                self.assertEqual(skill_md.parent.name, metadata["name"])
+                self.assertIsInstance(metadata["description"], str)
+                self.assertIn("Use ", metadata["description"])
+
+    def test_copilot_does_not_have_an_independent_skill_tree(self) -> None:
+        self.assertFalse((REPOSITORY_ROOT / ".github" / "skills").exists())
+
+    def test_repository_tracks_no_generated_or_duplicate_skill_tree(self) -> None:
+        result = subprocess.run(
+            [
+                "git",
+                "ls-files",
+                "--",
+                ".github/skills",
+                ".claude/skills",
+            ],
+            cwd=REPOSITORY_ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual("", result.stdout)
 
 
 class CliTests(unittest.TestCase):

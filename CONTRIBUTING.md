@@ -50,10 +50,12 @@ Run the same commands used by continuous integration:
 
 ```shell
 python -m unittest discover -s tests -v
-python scripts/validate_skills.py
+python scripts/validate_skills.py --require-skills
 ```
 
 The validator checks structure, frontmatter, names, duplicates, and local reference safety without executing skill scripts. Errors fail validation; project-convention warnings do not. During foundation work an empty catalog is reported as zero skills validated. Structural success does not prove behavioral quality.
+
+Changes to platform distribution must keep `.agents/skills/` as the only canonical source, update the [compatibility matrix](docs/platforms/compatibility-matrix.md), and add deterministic tests for generated content and safety boundaries. Do not commit generated `.claude/skills/` output or create an independently editable `.github/skills/` tree.
 
 ## Write tests
 

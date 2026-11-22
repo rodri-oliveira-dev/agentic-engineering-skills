@@ -56,11 +56,13 @@ Repository-wide guidance should be linked, not copied into every skill. Skill-sp
 
 Compatibility is delivered in priority order: Codex, GitHub Copilot, then Claude Code.
 
-- **Codex:** discovers repository skills under `.agents/skills/`. The ten-skill canonical catalog is implemented and structurally validated there; representative behavioral scenarios are documented but have not been executed as a cross-model evaluation suite.
-- **GitHub Copilot:** documents `.agents/skills/` as a supported project location. Actual behavior across intended Copilot surfaces must still be tested before compatibility is claimed.
-- **Claude Code:** follows the Agent Skills standard but documents project discovery under `.claude/skills/`, and adds proprietary frontmatter and runtime features. A future adapter or packaging step must expose the canonical content in the expected location without creating a second manually maintained source.
+The evidence level for each platform is recorded in the [platform compatibility matrix](platforms/compatibility-matrix.md). Official format or discovery support, deterministic structural validation, and controlled runtime behavior are separate claims.
 
-No installer or adapter is part of the foundation phase. Possible future mechanisms include generated artifacts or supported filesystem links. The selected mechanism must be tested on target operating systems and agent surfaces before adoption. Generated compatibility output must not be edited as source.
+- **Codex:** discovers repository skills under `.agents/skills/`. The ten-skill canonical catalog is implemented and structurally validated there; representative behavioral scenarios are documented but have not been executed as a cross-model evaluation suite.
+- **GitHub Copilot:** documents `.agents/skills/` as a supported project location. The canonical catalog has been audited and structurally validated against the shared format, so no adapter or `.github/skills/` copy is needed. Discovery, activation, and workflow behavior across intended Copilot surfaces remain unverified.
+- **Claude Code:** follows the Agent Skills standard and documents project discovery under `.claude/skills/`. The standard-library installer copies complete canonical skill directories into that location as a generated distribution, with a hash manifest that supports safe updates and rejects unmanaged conflicts. No Claude-specific frontmatter is added.
+
+Copilot does not require an adapter because it supports the canonical location. Claude Code's generated distribution is created only on demand and is ignored in this repository; `.agents/skills/` remains authoritative. Generated output must not be edited as source. The installer detects local edits through recorded hashes and stops instead of overwriting them.
 
 Vendor-specific metadata, invocation controls, dynamic context injection, UI configuration, or tool syntax must remain in optional adapters or overlays. They must not become requirements of the shared skill.
 
@@ -106,7 +108,11 @@ Future scripts must be reviewable, narrowly scoped, fail clearly, and avoid sile
 
 ### One canonical skill tree
 
-Using `.agents/skills/` aligns directly with Codex and Copilot and prevents content drift. The trade-off is that platforms using another discovery path require an adapter. This cost is preferred over maintaining multiple editable copies.
+Using `.agents/skills/` aligns directly with Codex and Copilot and prevents content drift. Claude Code receives a generated copy through the installer because its project discovery path differs. The copy is explicitly managed distribution output, not an independently editable source.
+
+### Managed copy instead of symlinks
+
+Claude Code supports symlinked skill directories, but symlink creation and repository behavior vary across operating systems and Windows privilege configurations. The installer therefore uses ordinary files plus SHA-256 inventory metadata. It preflights the complete requested operation, writes changed files atomically, leaves identical files untouched, and refuses to overwrite or remove unmanaged or locally modified content.
 
 ### Open core with isolated platform extensions
 
@@ -150,13 +156,14 @@ Review checks scope, specification conformance, project conventions, security bo
 
 ### Automated validation limits
 
-CI verifies Python tests and the structural validator on Ubuntu with Python 3.11. It checks YAML, metadata, catalog structure, duplicate names, and local reference safety without executing bundled skill scripts. It does not prove behavioral quality, external-link availability, Markdown fragment validity, cross-platform agent behavior, or compatibility with Codex, Copilot, or Claude Code. Those claims require separate evaluation.
+CI verifies Python tests and the structural validator on Ubuntu with Python 3.11. It checks YAML, metadata, catalog structure, duplicate names, local reference safety, and generated Claude distribution integrity without executing bundled skill scripts. It does not prove behavioral quality, external-link availability, Markdown fragment validity, or cross-platform agent behavior. Runtime claims require separate controlled evaluation and are recorded independently from structural compatibility.
 
 ## Official references considered
 
 - [Agent Skills specification](https://agentskills.io/specification)
 - [OpenAI: Build skills](https://developers.openai.com/codex/skills)
-- [GitHub Copilot: Agent skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills)
+- [GitHub Copilot: Agent skills](https://docs.github.com/en/copilot/concepts/customizations/agent-skills)
+- [GitHub Copilot: Add agent skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills)
 - [Claude Code: Extend Claude with skills](https://code.claude.com/docs/en/skills)
 
 These documents describe different discovery locations and vendor extensions. The shared architecture relies only on their common open format; platform behavior remains subject to implementation and verification.
