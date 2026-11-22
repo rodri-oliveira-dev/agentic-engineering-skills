@@ -10,15 +10,15 @@ A biblioteca trata um problema comum: workflows de agentes costumam ser repetido
 
 O projeto é destinado a pessoas desenvolvedoras, mantenedoras e equipes que desejam inspecionar, adaptar e compartilhar workflows repetíveis para agentes.
 
-## Plataformas planejadas
+## Suporte a plataformas
 
-O desenvolvimento priorizará:
+O contrato compartilhado segue a [especificação aberta Agent Skills](https://agentskills.io/specification), e `.agents/skills/` é a única fonte canônica.
 
-1. OpenAI Codex
-2. GitHub Copilot
-3. Claude Code
+- **OpenAI Codex:** o catálogo com dez skills está implementado no local de descoberta do repositório usado pelo Codex e foi validado estruturalmente. Os cenários comportamentais representativos estão documentados, mas ainda não houve avaliação comportamental automatizada entre modelos.
+- **GitHub Copilot:** a compatibilidade permanece pendente de validação nas superfícies pretendidas do Copilot.
+- **Claude Code:** a compatibilidade permanece pendente de validação e de um adaptador sem duplicação para seu local documentado de descoberta no projeto.
 
-O contrato compartilhado segue a [especificação aberta Agent Skills](https://agentskills.io/specification). O suporte a cada plataforma só será declarado depois de implementado e testado. A fonte canônica ficará em `.agents/skills/`; integrações específicas deverão reutilizá-la, sem manter cópias independentes.
+Integrações específicas de plataforma deverão reutilizar a fonte canônica, sem manter cópias editáveis independentes.
 
 ## Princípios de qualidade
 
@@ -41,19 +41,24 @@ O contrato compartilhado segue a [especificação aberta Agent Skills](https://a
 
 ## Catálogo de skills
 
-As skills canônicas ficam em [`.agents/skills/`](.agents/skills/). Cinco das dez skills planejadas estão implementadas:
+As skills canônicas ficam em [`.agents/skills/`](.agents/skills/). O catálogo planejado completo contém atualmente dez skills implementadas:
 
 - `docs`: cria, revisa e atualiza documentação técnica de software.
 - `commits`: prepara, organiza, revisa e cria commits Git focados.
 - `refactor`: melhora a manutenibilidade preservando o comportamento observável.
 - `api-design`: projeta e evolui contratos de APIs e integrações.
 - `testing`: planeja, implementa, executa e avalia testes automatizados.
+- `code-review`: revisa diffs e mudanças propostas em busca de defeitos acionáveis sustentados por evidências.
+- `sql`: desenvolve e revisa SQL relacional, integridade, transações, índices e evolução segura de esquemas.
+- `debug`: investiga falhas observadas com evidências, hipóteses verificáveis e diagnósticos controlados.
+- `security-review`: realiza revisões defensivas autorizadas de código, configuração, dependências e arquitetura.
+- `deployment-readiness`: avalia a prontidão técnica para implantação controlada sem executá-la.
 
-As demais skills são acompanhadas no [roadmap](docs/roadmap.md). O conteúdo canônico segue o contrato aberto Agent Skills e prioriza o Codex, mas a compatibilidade com GitHub Copilot e Claude Code ainda não foi testada nem declarada.
+Cada skill possui um único `SKILL.md` canônico; orientações especializadas ficam em arquivos `references/` carregados sob demanda, e cenários representativos positivos, negativos e de evidência insuficiente ficam em `tests/fixtures/<skill>/`. Consulte o [roadmap](docs/roadmap.md) para o trabalho de avaliação e plataformas. A compatibilidade com GitHub Copilot e Claude Code ainda não foi testada nem declarada.
 
 ## Estado do projeto
 
-A fundação e as primeiras cinco skills essenciais estão implementadas. Instaladores, adaptadores de plataforma e avaliação comportamental automatizada ainda não estão disponíveis.
+A fundação e todas as dez skills planejadas estão implementadas. Isso não representa uma versão 1.0 publicada. Instaladores, adaptadores para Copilot e Claude e avaliação comportamental automatizada ainda não estão disponíveis.
 
 Com Python 3.11 ou superior e as dependências de `requirements.txt` instaladas, execute `python scripts/validate_skills.py --require-skills` para validar o catálogo não vazio e `python -m unittest discover -s tests -v` para rodar os testes automatizados do validador. A validação estrutural verifica formato, metadados, integridade do catálogo e referências locais; ela não demonstra ativação ou qualidade comportamental das skills. Cenários comportamentais representativos estão documentados em `tests/fixtures/`, mas não constituem resultados de testes automatizados.
 

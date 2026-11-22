@@ -60,7 +60,7 @@ Apply these mechanisms only when requirements justify them:
 - Design errors, metrics, traces, and audit records to support operations without exposing credentials, personal data, internals, or forbidden resource existence.
 - Identify changes to required fields, types, nullability, defaults, enum values, identifiers, ordering, error behavior, serialization, and timing as potential consumer breaks. Additive changes are not automatically safe for strict consumers.
 - Account for deployed consumers and tolerant-reader behavior rather than reasoning from the latest schema alone. Prefer staged migration and measurable deprecation over abrupt removal.
-- For deep vulnerability analysis, use `security-review` when that future skill is available; do not depend on it for the baseline security decisions in this workflow.
+- For a dedicated vulnerability assessment, compose this skill with `security-review`; keep baseline contract security decisions in this workflow and do not turn API design into an AppSec audit.
 
 ## Limits and uncertainty
 

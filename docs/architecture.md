@@ -20,11 +20,11 @@ The target organization is:
 ```text
 .
 ├── .agents/
-│   └── skills/          # Canonical skill directories, added during implementation
+│   └── skills/          # Canonical skill directories
 ├── docs/                # Architecture, authoring contract, and roadmap
 ├── scripts/             # Repository-level validation tooling
 ├── tests/
-│   └── fixtures/        # Future validation tests and representative fixtures
+│   └── fixtures/        # Representative behavioral scenarios
 ├── .github/
 │   ├── ISSUE_TEMPLATE/  # Focused issue forms
 │   └── workflows/       # Continuous integration
@@ -48,7 +48,7 @@ Component responsibilities:
 
 ## Shared Agent Skills contract
 
-Each future skill is a directory containing a required `SKILL.md` with YAML frontmatter and Markdown instructions. Optional `scripts/`, `references/`, and `assets/` stay beside the skill when their contents belong only to it. The detailed boundary between specification requirements and project conventions is defined in [Skill authoring](skill-authoring.md).
+Each skill is a directory containing a required `SKILL.md` with YAML frontmatter and Markdown instructions. Optional `scripts/`, `references/`, and `assets/` stay beside the skill when their contents belong only to it. The detailed boundary between specification requirements and project conventions is defined in [Skill authoring](skill-authoring.md).
 
 Repository-wide guidance should be linked, not copied into every skill. Skill-specific reference files should be focused and loaded only when needed, preserving context for the task itself.
 
@@ -56,7 +56,7 @@ Repository-wide guidance should be linked, not copied into every skill. Skill-sp
 
 Compatibility is delivered in priority order: Codex, GitHub Copilot, then Claude Code.
 
-- **Codex:** discovers repository skills under `.agents/skills/`. This is the initial implementation target.
+- **Codex:** discovers repository skills under `.agents/skills/`. The ten-skill canonical catalog is implemented and structurally validated there; representative behavioral scenarios are documented but have not been executed as a cross-model evaluation suite.
 - **GitHub Copilot:** documents `.agents/skills/` as a supported project location. Actual behavior across intended Copilot surfaces must still be tested before compatibility is claimed.
 - **Claude Code:** follows the Agent Skills standard but documents project discovery under `.claude/skills/`, and adds proprietary frontmatter and runtime features. A future adapter or packaging step must expose the canonical content in the expected location without creating a second manually maintained source.
 
