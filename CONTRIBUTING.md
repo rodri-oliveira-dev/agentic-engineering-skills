@@ -51,9 +51,10 @@ Run the same commands used by continuous integration:
 ```shell
 python -m unittest discover -s tests -v
 python scripts/validate_skills.py --require-skills
+python scripts/evaluate_scenarios.py check
 ```
 
-The validator checks structure, frontmatter, names, duplicates, and local reference safety without executing skill scripts. Errors fail validation; project-convention warnings do not. During foundation work an empty catalog is reported as zero skills validated. Structural success does not prove behavioral quality.
+The validator checks structure, frontmatter, names, duplicates, and local reference safety without executing skill scripts. Errors fail validation; project-convention warnings do not. The scenario checker verifies fixture coverage and any supplied evaluation-record schema; it does not run an agent or turn fixtures into behavioral results. Structural success does not prove behavioral quality.
 
 Changes to platform distribution must keep `.agents/skills/` as the only canonical source, update the [compatibility matrix](docs/platforms/compatibility-matrix.md), and add deterministic tests for generated content and safety boundaries. Do not commit generated `.claude/skills/` output or create an independently editable `.github/skills/` tree.
 
@@ -67,7 +68,7 @@ Cover the smallest behavior changed. Assert actionable diagnostics and exit code
 
 Use the bug report issue form. Include reproducible steps, observed and expected behavior, platform and Python information, and relevant logs with secrets removed. Search existing issues first when practical.
 
-Security-sensitive reports should avoid publishing exploit details or credentials in a public issue. Until a dedicated security policy is added, use GitHub's private vulnerability reporting feature when it is available for the repository.
+Security-sensitive reports must follow the [security policy](SECURITY.md) and avoid publishing exploit details or credentials in a public issue.
 
 ## Propose improvements
 
@@ -78,7 +79,7 @@ Use the feature request form to explain the problem before the proposed solution
 - Create a focused branch; do not mix unrelated changes.
 - Update documentation when behavior or contracts change.
 - Add or adjust tests for verifiable behavior.
-- Run both CI commands locally and report their observed results.
+- Run all validation commands locally and report their observed results, including skips.
 - Complete the pull request checklist and describe known limitations.
 - Do not claim compatibility that has not been tested.
 

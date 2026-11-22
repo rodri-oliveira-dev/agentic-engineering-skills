@@ -2,6 +2,8 @@
 
 This matrix separates vendor support, repository structural evidence, and runtime behavior. A shared file format or documented discovery path does not by itself prove that a skill activates correctly or produces a useful result.
 
+Release-level conclusions and pending publication conditions are recorded separately in [Version 1.0.0 readiness](../releases/v1.0.0-readiness.md).
+
 ## Status definitions
 
 - **Supported:** current official platform documentation recognizes the format, location, or workflow, and this repository uses it as documented.

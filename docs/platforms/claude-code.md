@@ -112,6 +112,8 @@ Selection values must be direct ASCII kebab-case skill names. Values containing 
 - The installer currently supports only the `claude-code` platform selector.
 - Generated copies do not update automatically; rerun the installer after canonical changes.
 - The installer rejects source symlinks rather than copying or dereferencing them.
+- The canonical source catalog itself must be a real directory, not a symlink.
+- The selected destination itself must not be a symlink; use the explicit real directory so path checks and ownership remain unambiguous.
 - Claude Code reserves the skill directory names `synced` and `anthropic-skills`; the installer rejects those names. The current catalog uses neither.
 - Personal local skills do not imply availability in Claude Code cloud or Cowork sessions.
 - Claude Code-specific frontmatter, dynamic context injection, plugins, and `CLAUDE.md` files are intentionally not added.

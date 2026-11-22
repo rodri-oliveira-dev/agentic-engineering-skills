@@ -1,68 +1,67 @@
 # Agentic Engineering Skills
 
+[English](README.md) | [Português (Brasil)](README.pt-BR.md)
+
 [![Validate skills](https://github.com/rodri-oliveira-dev/agentic-engineering-skills/actions/workflows/validate-skills.yml/badge.svg)](https://github.com/rodri-oliveira-dev/agentic-engineering-skills/actions/workflows/validate-skills.yml)
 
-Agentic Engineering Skills é uma coleção gratuita e open source de skills reutilizáveis para agentes de engenharia de software. O projeto pretende transformar práticas recorrentes de engenharia em instruções revisáveis e versionadas, sem vincular seu conteúdo central a um único fornecedor.
+Uma biblioteca gratuita e open source de workflows reutilizáveis de engenharia de software para agentes. Cada skill tem responsabilidade estreita, limites explícitos de ativação, comportamento seguro em falhas e instruções revisáveis. A fonte neutra em relação a fornecedores existe somente em `.agents/skills/`; OpenAI Codex é a plataforma prioritária.
 
-A biblioteca trata um problema comum: workflows de agentes costumam ser repetidos em prompts, ficar espalhados entre repositórios ou ser escritos em formatos específicos de uma plataforma. Este repositório oferece skills focadas, com escopo, entradas, workflow, validação e tratamento de falhas explícitos.
-
-## Público-alvo
-
-O projeto é destinado a pessoas desenvolvedoras, mantenedoras e equipes que desejam inspecionar, adaptar e compartilhar workflows repetíveis para agentes.
-
-## Suporte a plataformas
-
-O contrato compartilhado segue a [especificação aberta Agent Skills](https://agentskills.io/specification), e `.agents/skills/` é a única fonte canônica.
-
-- **OpenAI Codex:** o catálogo com dez skills está implementado no local de descoberta do repositório usado pelo Codex e foi validado estruturalmente. Os cenários comportamentais representativos estão documentados, mas ainda não houve avaliação comportamental automatizada entre modelos.
-- **GitHub Copilot:** o catálogo canônico usa o local de projeto `.agents/skills/` documentado pelo Copilot e teve sua compatibilidade estrutural verificada. A descoberta, a ativação e a execução dos workflows ainda não foram verificadas comportamentalmente nas diferentes superfícies do Copilot.
-- **Claude Code:** o catálogo canônico corresponde ao formato Agent Skills aceito pelo Claude Code e pode ser instalado como uma distribuição gerada, gerenciada por hashes, em `.claude/skills/`. A descoberta, a ativação e a execução dos workflows ainda não foram verificadas comportamentalmente no Claude Code.
-
-Integrações específicas de plataforma deverão reutilizar a fonte canônica, sem manter cópias editáveis independentes.
-
-## Princípios de qualidade
-
-- Uma responsabilidade bem definida por skill.
-- Instruções concisas e orientadas a ações, com carregamento progressivo de referências.
-- Validação observável, sem inventar resultados de testes, diagnósticos ou verificações.
-- Tratamento explícito de pré-condições, incertezas, falhas e limitações.
-- Confirmação antes de operações destrutivas ou irreversíveis.
-- Respeito às permissões e políticas de segurança do ambiente.
-- Núcleo portável, separado de extensões específicas de fornecedores.
-
-## Documentação
-
-- [Arquitetura](docs/architecture.md)
-- [Contrato para autoria de skills](docs/skill-authoring.md)
-- [Validação e testes](docs/validation.md)
-- [GitHub Copilot](docs/platforms/github-copilot.md)
-- [Claude Code](docs/platforms/claude-code.md)
-- [Matriz de compatibilidade entre plataformas](docs/platforms/compatibility-matrix.md)
-- [Roadmap](docs/roadmap.md)
-- [Como contribuir](CONTRIBUTING.md)
-- [README principal em inglês](README.md)
+Compatibilidade estrutural não comprova qualidade comportamental. O repositório valida arquivos e cenários offline, enquanto resultados de agentes reais são registrados separadamente e ainda estão pendentes.
 
 ## Catálogo de skills
 
-As skills canônicas ficam em [`.agents/skills/`](.agents/skills/). O catálogo planejado completo contém atualmente dez skills implementadas:
-
-- `docs`: cria, revisa e atualiza documentação técnica de software.
-- `commits`: prepara, organiza, revisa e cria commits Git focados.
+- `api-design`: projeta ou evolui contratos de APIs e integrações.
+- `code-review`: revisa mudanças em busca de defeitos acionáveis sustentados por evidências.
+- `commits`: prepara, organiza, revisa ou cria commits Git focados.
+- `debug`: investiga falhas observadas por meio de diagnósticos controlados.
+- `deployment-readiness`: avalia a prontidão para implantação controlada sem implantar.
+- `docs`: cria, revisa ou atualiza documentação técnica de software.
 - `refactor`: melhora a manutenibilidade preservando o comportamento observável.
-- `api-design`: projeta e evolui contratos de APIs e integrações.
-- `testing`: planeja, implementa, executa e avalia testes automatizados.
-- `code-review`: revisa diffs e mudanças propostas em busca de defeitos acionáveis sustentados por evidências.
-- `sql`: desenvolve e revisa SQL relacional, integridade, transações, índices e evolução segura de esquemas.
-- `debug`: investiga falhas observadas com evidências, hipóteses verificáveis e diagnósticos controlados.
-- `security-review`: realiza revisões defensivas autorizadas de código, configuração, dependências e arquitetura.
-- `deployment-readiness`: avalia a prontidão técnica para implantação controlada sem executá-la.
+- `security-review`: realiza revisões defensivas de segurança autorizadas.
+- `sql`: desenvolve e revisa SQL relacional e evolução segura de esquemas.
+- `testing`: planeja, implementa, executa ou avalia testes automatizados.
 
-Cada skill possui um único `SKILL.md` canônico; orientações especializadas ficam em arquivos `references/` carregados sob demanda, e cenários representativos positivos, negativos e de evidência insuficiente ficam em `tests/fixtures/<skill>/`. Consulte o [guia do GitHub Copilot](docs/platforms/github-copilot.md), o [guia do Claude Code](docs/platforms/claude-code.md) e o [roadmap](docs/roadmap.md) para instalação, evidência estrutural, avaliação comportamental e o trabalho restante de plataformas.
+Cada diretório canônico contém `SKILL.md` e, quando úteis, arquivos `references/` focados e carregados somente sob demanda.
 
-## Estado do projeto
+## Início rápido
 
-A fundação e todas as dez skills planejadas estão implementadas. Isso não representa uma versão 1.0 publicada. O Copilot não precisa de adaptador de projeto porque reconhece o diretório canônico. Um instalador Python baseado apenas na biblioteca padrão gera distribuições gerenciadas para o Claude Code sem alterar as skills canônicas. A avaliação comportamental automatizada ainda não está disponível.
+As ferramentas do repositório exigem Python 3.11 ou superior. O validador usa a dependência PyYAML fixada; o instalador e as demais ferramentas usam a biblioteca padrão.
 
-Com Python 3.11 ou superior e as dependências de `requirements.txt` instaladas, execute `python scripts/validate_skills.py --require-skills` para validar o catálogo não vazio e `python -m unittest discover -s tests -v` para rodar os testes automatizados do validador. A validação estrutural verifica formato, metadados, integridade do catálogo e referências locais; ela não demonstra ativação ou qualidade comportamental das skills. Cenários comportamentais representativos estão documentados em `tests/fixtures/`, mas não constituem resultados de testes automatizados.
+```shell
+git clone https://github.com/rodri-oliveira-dev/agentic-engineering-skills.git
+cd agentic-engineering-skills
+python -m venv .venv
+python -m pip install -r requirements.txt
+python scripts/validate_skills.py --require-skills
+python -m unittest discover -s tests -v
+python scripts/evaluate_scenarios.py check
+```
 
-O desenvolvimento é público, e o projeto é software livre distribuído sob a [licença MIT](LICENSE).
+Comandos de ativação pertencem às plataformas, não são opções de CLI deste repositório:
+
+- **Codex:** use diretamente o catálogo `.agents/skills/` versionado ou copie diretórios completos das skills selecionadas para outro repositório. Consulte o [guia do Codex](docs/platforms/codex.md).
+- **GitHub Copilot:** use o mesmo diretório canônico de projeto; a GitHub CLI também oferece um fluxo de instalação em prévia pública. Consulte o [guia do Copilot](docs/platforms/github-copilot.md).
+- **Claude Code:** visualize e crie uma distribuição gerenciada em `.claude/skills/` com o instalador incluído:
+
+  ```shell
+  python scripts/install_skills.py --platform claude-code --destination .claude/skills --all --dry-run
+  python scripts/install_skills.py --platform claude-code --destination .claude/skills --all
+  ```
+
+  Consulte o [guia do Claude Code](docs/platforms/claude-code.md) antes de escolher um destino explícito de projeto ou usuário.
+
+## Atualização
+
+Atualize este checkout com Git somente depois de preservar ou registrar o trabalho local e execute novamente as validações. Codex e Copilot usam este repositório imediatamente ao operar nele. Para uma instalação gerenciada do Claude Code, repita o mesmo comando do instalador; ele atualiza arquivos gerenciados não alterados e recusa sobrescrever conteúdo não gerenciado ou modificado localmente. Cópias manuais precisam ser revisadas e substituídas manualmente.
+
+## Validação e compatibilidade
+
+As verificações automatizadas cobrem estrutura e metadados das dez skills, referências locais seguras, integridade do catálogo, instalação, atualização e remoção, prevenção de sobrescrita, entradas inválidas, regressões do validador, cobertura de cenários e links da documentação. Elas não exigem credenciais, serviços pagos nem rede e nunca executam comandos das skills.
+
+Descoberta, ativação, recusa e qualidade de saída em modelos reais constituem evidência diferente. Consulte [Validação e testes](docs/validation.md), a [matriz de compatibilidade](docs/platforms/compatibility-matrix.md) e a [prontidão da v1.0.0](docs/releases/v1.0.0-readiness.md) para conhecer os limites exatos.
+
+## Contribuição e segurança
+
+Leia [Como contribuir](CONTRIBUTING.md) e o [contrato de autoria de skills](docs/skill-authoring.md), adicione testes focados e informe somente verificações realmente executadas. Relate vulnerabilidades de forma privada conforme a [política de segurança](SECURITY.md). O projeto usa a [licença MIT](LICENSE); dependências e atribuições conhecidas estão nos [avisos de terceiros](THIRD_PARTY_NOTICES.md).
+
+Documentação adicional: [arquitetura](docs/architecture.md), [roadmap](docs/roadmap.md) e [guias de plataforma](docs/platforms/compatibility-matrix.md).

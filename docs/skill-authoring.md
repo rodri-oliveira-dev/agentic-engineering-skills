@@ -2,7 +2,7 @@
 
 This contract governs every skill that will be added to this repository. It deliberately separates requirements of the open Agent Skills specification from stricter project conventions.
 
-No skill is implemented as part of the foundation phase.
+The contract applies to all ten implemented skills and to proposed changes. Adding another skill requires an explicit project-scope decision; this document does not itself expand the catalog.
 
 ## Normative language
 

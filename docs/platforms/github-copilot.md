@@ -49,6 +49,8 @@ gh skill install rodri-oliveira-dev/agentic-engineering-skills code-review --all
 
 GitHub documents Copilot project scope as the default. The `--allow-hidden-dirs` option is required because the canonical catalog is below the hidden `.agents/` directory. Remote preview has been verified with GitHub CLI 2.94.0; installation was not executed because it would modify the checkout. The manual directory layout above is the format covered by local tests.
 
+For a skill installed by this preview workflow, GitHub CLI documents `gh skill update` as the update command. Preview the source again and review local work before updating; this repository has not executed or verified the mutating install/update path.
+
 ## User installation
 
 For local personal skills shared across projects, GitHub documents `~/.copilot/skills/` and `~/.agents/skills/`. Copy complete skill directories into one of those locations, or use the public-preview GitHub CLI installer with user scope:

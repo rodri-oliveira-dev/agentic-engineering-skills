@@ -2,7 +2,7 @@
 
 ## Purpose and principles
 
-Agentic Engineering Skills will provide reusable, inspectable workflows for software-engineering agents. Its architecture favors an open contract, a single canonical source, small cohesive skills, progressive disclosure, explicit validation, and safe operation.
+Agentic Engineering Skills provides reusable, inspectable workflows for software-engineering agents. Its architecture favors an open contract, a single canonical source, small cohesive skills, progressive disclosure, explicit validation, and safe operation.
 
 The design follows these principles:
 
@@ -15,20 +15,22 @@ The design follows these principles:
 
 ## Repository organization
 
-The target organization is:
+The repository organization is:
 
 ```text
 .
 ├── .agents/
 │   └── skills/          # Canonical skill directories
-├── docs/                # Architecture, authoring contract, and roadmap
-├── scripts/             # Repository-level validation tooling
+├── docs/                # Architecture, platform guides, validation, and release readiness
+├── scripts/             # Validation, evaluation-record, and distribution tooling
 ├── tests/
 │   └── fixtures/        # Representative behavioral scenarios
 ├── .github/
 │   ├── ISSUE_TEMPLATE/  # Focused issue forms
 │   └── workflows/       # Continuous integration
 ├── CONTRIBUTING.md      # Contribution workflow and acceptance criteria
+├── SECURITY.md          # Private reporting and safe-research policy
+├── THIRD_PARTY_NOTICES.md
 ├── README.md            # Primary project overview in English
 ├── README.pt-BR.md      # Project overview in Brazilian Portuguese
 ├── .gitignore
@@ -156,7 +158,7 @@ Review checks scope, specification conformance, project conventions, security bo
 
 ### Automated validation limits
 
-CI verifies Python tests and the structural validator on Ubuntu with Python 3.11. It checks YAML, metadata, catalog structure, duplicate names, local reference safety, and generated Claude distribution integrity without executing bundled skill scripts. It does not prove behavioral quality, external-link availability, Markdown fragment validity, or cross-platform agent behavior. Runtime claims require separate controlled evaluation and are recorded independently from structural compatibility.
+CI verifies Python tests, scenario coverage, and the structural validator on Ubuntu with Python 3.11 and Windows with Python 3.13. It checks YAML, metadata, catalog structure, duplicate names, local reference safety, documentation links, and generated Claude distribution integrity without executing bundled skill commands. It does not prove behavioral quality, external-link availability, or cross-platform agent behavior. Runtime claims require separate controlled evaluation and are recorded independently from structural compatibility.
 
 ## Official references considered
 
