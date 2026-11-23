@@ -1,0 +1,154 @@
+name: Supply chain audit
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '23 5 * * 1'
+  workflow_dispatch:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supply-chain-@@{ github.workflow }}-@@{ github.ref }}
+  cancel-in-progress: @@{ github.event_name != 'release' }}
+
+jobs:
+  audit:
+    name: SCA, SBOM and provenance inventory
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.11'
+
+      - name: Install pinned audit tool and project dependencies
+        run: python -m pip install --index-url https://pypi.org/simple 'pip-audit==2.10.1' -r requirements.txt
+
+      - name: Record tool version
+        run: |
+          mkdir -p "$RUNNER_TEMP/supply-chain"
+          python -m pip_audit --version > "$RUNNER_TEMP/supply-chain/auditor-version.txt"
+
+      - name: Audit Python dependency advisories
+        id: sca
+        continue-on-error: true
+        run: python -m pip_audit --vulnerability-service pypi --requirement requirements.txt --format json --output "$RUNNER_TEMP/supply-chain/sca-report.json"
+
+      - name: Create CycloneDX Python SBOM
+        id: sbom
+        continue-on-error: true
+        run: python -m pip_audit --vulnerability-service pypi --requirement requirements.txt --format cyclonedx-json --output "$RUNNER_TEMP/supply-chain/sbom.cdx.json"
+
+      - name: Verify canonical plugin and generated package
+        id: package
+        run: |
+          python scripts/package_plugins.py check
+          python scripts/package_plugins.py verify
+
+      - name: Check PyPI distribution digest and inventory action references
+        id: inventory
+        run: |
+          mkdir -p "$RUNNER_TEMP/pypi-wheels"
+          python -m pip download --no-deps --only-binary=:all: --index-url https://pypi.org/simple --dest "$RUNNER_TEMP/pypi-wheels" -r requirements.txt
+          python scripts/supply_chain_evidence.py inventory --wheel-dir "$RUNNER_TEMP/pypi-wheels" --output "$RUNNER_TEMP/supply-chain/provenance-inventory.json"
+
+      - name: Upload audit evidence even when checks fail
+        id: evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: supply-chain-evidence-@@{ github.run_id }}-@@{ github.run_attempt }}
+          path: @@{ runner.temp }}/supply-chain/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enforce audit result
+        if: always()
+        env:
+          SCA: @@{ steps.sca.outcome }}
+          SBOM: @@{ steps.sbom.outcome }}
+          PACKAGE: @@{ steps.package.outcome }}
+          INVENTORY: @@{ steps.inventory.outcome }}
+          EVIDENCE: @@{ steps.evidence.outcome }}
+        run: |
+          for result in "$SCA" "$SBOM" "$PACKAGE" "$INVENTORY" "$EVIDENCE"; do
+            if [[ "$result" != 'success' ]]; then
+              echo 'Supply-chain check failed or was not completed; review the evidence artifact and job logs.' >&2
+              exit 1
+            fi
+          done
+          echo 'SCA, CycloneDX SBOM, package integrity and provenance inventory passed.'
+
+  release-provenance:
+    name: Attest next release package
+    if: github.event_name == 'release' && github.event.action == 'published'
+    needs: audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Check out the published release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: @@{ github.event.release.tag_name }}
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.11'
+
+      - name: Verify plugin inputs before packaging
+        run: |
+          python scripts/package_plugins.py check
+          python scripts/package_plugins.py verify
+
+      - name: Build deterministic archive and checksum
+        env:
+          RELEASE_TAG: @@{ github.event.release.tag_name }}
+        run: |
+          python scripts/supply_chain_evidence.py package --tag "$RELEASE_TAG" --output "dist/agentic-engineering-${RELEASE_TAG}.zip"
+
+      - name: Attest the exact archive bytes
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/agentic-engineering-*.zip
+
+      - name: Upload immutable workflow evidence
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: attested-release-${{ github.event.release.tag_name }}-${{ github.run_id }}
+          path: |
+            dist/*.zip
+            dist/*.sha256
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Attach the attested package and checksum to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$RELEASE_TAG" dist/*.zip dist/*.sha256 --repo "$GITHUB_REPOSITORY"
