@@ -101,6 +101,8 @@ Edite somente `.agents/skills/`. Regenere a saída de marketplace apenas quando 
 
 Leia [Como contribuir](CONTRIBUTING.md) e o [contrato de autoria de skills](docs/skill-authoring.md), adicione evidências focadas e informe somente verificações realmente executadas. Relate vulnerabilidades de forma privada conforme a [política de segurança](SECURITY.md).
 
+Os resultados de auditoria da cadeia de suprimentos e as atestações de releases futuras estão descritos na [avaliação de segurança](docs/security/supply-chain-assessment.md) e no [registro de riscos](docs/security/risk-register.md).
+
 ## Licença e documentação adicional
 
 O projeto usa a [licença MIT](LICENSE). Dependências e atribuições conhecidas estão nos [avisos de terceiros](THIRD_PARTY_NOTICES.md). A documentação adicional inclui [arquitetura](docs/architecture.md), [roadmap](docs/roadmap.md) e [arquitetura de distribuição](docs/distribution-architecture.md).
