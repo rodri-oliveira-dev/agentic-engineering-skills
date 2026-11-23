@@ -22,11 +22,13 @@ Install one skill and select its target agents interactively:
 npx skills add rodri-oliveira-dev/agentic-engineering-skills --skill code-review
 ```
 
-Install all ten skills for all detected agents only after reviewing the source and destinations:
+Install all ten skills for every supported agent without confirmation:
 
 ```shell
 npx skills add rodri-oliveira-dev/agentic-engineering-skills --all
 ```
+
+`--all` is shorthand for `--skill '*' --agent '*' -y`. To limit installation to specific agents, use explicit `--agent` values instead. Because this non-interactive operation can replace same-named skill directories, preserve uncommitted work and move or back up conflicting directories before running it.
 
 This route requires Node.js with `npx`, not Python. For explicit agent selection, marketplace installation, updates, removal, standalone copies, and verified status, use the [installation and distribution guide](docs/distribution.md).
 
@@ -34,7 +36,7 @@ This route requires Node.js with `npx`, not Python. For explicit agent selection
 
 | Method | What is available | Verified status |
 | --- | --- | --- |
-| Universal `npx skills` | One skill, selected skills, or all skills for selected agents | Local and remote catalog listing validated with CLI `1.9.0`; mutating installation is not recorded |
+| Universal `npx skills` | One or selected skills for selected agents; `--all` for every skill and supported agent | Local and remote catalog listing validated with CLI `1.9.0`; mutating installation is not recorded |
 | OpenAI Codex marketplace | The complete `agentic-engineering` plugin | Public repository registration, listing, and isolated installation validated with Codex CLI `0.171.0-alpha.13`; live activation not tested |
 | GitHub Copilot CLI marketplace | The complete plugin | Published and structurally validated; CLI installation and behavior not tested |
 | Claude Code marketplace | The complete plugin | Published and structurally validated; CLI installation and behavior not tested |

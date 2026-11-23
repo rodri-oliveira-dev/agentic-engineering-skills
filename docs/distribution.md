@@ -33,11 +33,13 @@ Select agents explicitly when you need a reproducible target. The current CLI ac
 npx skills add rodri-oliveira-dev/agentic-engineering-skills --skill testing --agent codex claude-code
 ```
 
-Install all ten skills only after reviewing the source and destinations:
+Install all ten skills for every supported agent without confirmation:
 
 ```shell
 npx skills add rodri-oliveira-dev/agentic-engineering-skills --all
 ```
+
+`--all` is shorthand for `--skill '*' --agent '*' -y`. Use explicit `--skill` and `--agent` values when you need a narrower selection. Since the non-interactive operation can replace same-named skill directories, preserve uncommitted work and move or back up conflicting directories before running it.
 
 Project scope is the default; `--global` installs for the current user. The CLI may offer symlinks or copies depending on the target. Use `--copy` when the environment cannot create or preserve symlinks.
 

@@ -22,11 +22,13 @@ Instale uma skill e selecione interativamente os agentes de destino:
 npx skills add rodri-oliveira-dev/agentic-engineering-skills --skill code-review
 ```
 
-Instale as dez skills para todos os agentes detectados somente depois de revisar a fonte e os destinos:
+Instale as dez skills para todos os agentes compatíveis, sem confirmação:
 
 ```shell
 npx skills add rodri-oliveira-dev/agentic-engineering-skills --all
 ```
+
+`--all` equivale a `--skill '*' --agent '*' -y`. Para limitar a instalação a agentes específicos, use valores `--agent` explícitos. Como essa operação não interativa pode substituir diretórios de skills com os mesmos nomes, preserve o trabalho não registrado e mova ou faça backup de diretórios conflitantes antes de executá-la.
 
 Essa opção exige Node.js com `npx`, não Python. Para seleção explícita de agentes, instalação por marketplace, atualizações, remoção, cópias independentes e status verificado, use o [guia de instalação e distribuição](docs/distribution.md).
 
@@ -34,7 +36,7 @@ Essa opção exige Node.js com `npx`, não Python. Para seleção explícita de 
 
 | Método | O que está disponível | Status verificado |
 | --- | --- | --- |
-| `npx skills` universal | Uma skill, skills selecionadas ou todas as skills para agentes selecionados | Listagem local e remota do catálogo validada com a CLI `1.9.0`; instalação com alterações não está registrada |
+| `npx skills` universal | Uma skill ou skills selecionadas para agentes escolhidos; `--all` para todas as skills e agentes compatíveis | Listagem local e remota do catálogo validada com a CLI `1.9.0`; instalação com alterações não está registrada |
 | Marketplace do OpenAI Codex | Plugin completo `agentic-engineering` | Registro do repositório público, listagem e instalação isolada validados com Codex CLI `0.171.0-alpha.13`; ativação real não testada |
 | Marketplace da GitHub Copilot CLI | Plugin completo | Publicado e validado estruturalmente; instalação pela CLI e comportamento não testados |
 | Marketplace do Claude Code | Plugin completo | Publicado e validado estruturalmente; instalação pela CLI e comportamento não testados |

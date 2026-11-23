@@ -151,6 +151,7 @@ class DocumentationTests(unittest.TestCase):
                 content = (REPOSITORY_ROOT / name).read_text(encoding="utf-8")
                 for option in required:
                     self.assertIn(option, content)
+                self.assertIn("`--skill '*' --agent '*' -y`", content)
                 self.assertNotIn("npx skills check", content)
 
     def test_readme_setup_uses_the_created_virtual_environment(self) -> None:
@@ -209,9 +210,9 @@ class DocumentationTests(unittest.TestCase):
         self.assertIn("v1.0.0-readiness.md", publication)
         self.assertIn("not ready and not authorized for publication", readiness)
 
-        version = current_plugin_version()
-        self.assertIn(f"Version {version} publication record", publication)
-        self.assertIn(f"releases/tag/{version}", publication)
+        historical_version = "1.0.0"
+        self.assertIn(f"Version {historical_version} publication record", publication)
+        self.assertIn(f"releases/tag/{historical_version}", publication)
 
     def test_current_documents_do_not_describe_published_manifests_as_unpublished(self) -> None:
         historical = REPOSITORY_ROOT / "docs" / "releases" / "v1.0.0-readiness.md"
