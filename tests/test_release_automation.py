@@ -45,8 +45,10 @@ class ReleaseAutomationTests(unittest.TestCase):
             path = releases.notes_path(root, "1.0.1")
             self.assertTrue(path.is_file())
             self.assertIn("Fix validations", path.read_text(encoding="utf-8"))
+            duplicate = releases.notes_path(root, "1.0.2")
+            duplicate.write_text("Prior draft", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "already exist"):
-                releases.prepare("1.0.1", "Same", root)
+                releases.prepare("1.0.2", "Same", root)
 
     def test_preparation_rejects_downgrade_before_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
