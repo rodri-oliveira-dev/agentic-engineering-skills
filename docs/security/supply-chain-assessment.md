@@ -53,7 +53,7 @@ The privileged publisher does not check out or execute repository Python code. I
 
 The GitHub release and asset APIs are not atomic. In the event of a failed draft or upload, a draft release or tag may remain and require manual recovery; the workflow refuses to delete or replace an existing tag/release. User-facing verification commands are in the [release process](../releases/release-process.md).
 
-Version `1.0.0` predates these controls and was not retroactively attested. The protected publisher has not yet been tested by a real future release; PR and main checks establish only the read-only audit and structural workflow contracts.
+Version `1.0.0` predates these controls and was not retroactively attested. The first attempt to publish `1.0.1` on 2026-11-23 completed SCA, build, checksum generation and [Sigstore attestation](https://github.com/rodri-oliveira-dev/agentic-engineering-skills/attestations/71200801), then failed during draft asset readback because no Git tag existed yet. The release remained an unpublished Draft. A separate, manually approved recovery workflow verifies the signed original candidate before publishing by Release ID. The end-to-end public release and recovery path remain unverified until a successful recovery run is recorded.
 
 ## Manual review and residual risk
 

@@ -120,9 +120,58 @@ class SupplyChainEvidenceTests(unittest.TestCase):
             names.index("Create draft release with verified assets"),
         )
         self.assertLess(
-            names.index("Download draft assets and compare published bytes"),
-            names.index("Publish after successful artifact readback"),
+            names.index("Download draft assets by release ID and compare published bytes"),
+            names.index("Publish verified draft and verify newly created Git tag"),
         )
+
+    def test_draft_release_readback_does_not_assume_tag_exists(self) -> None:
+        workflow_file = evidence.ROOT / ".github/workflows/publish-release.yml"
+        workflow = yaml.safe_load(workflow_file.read_text(encoding="utf-8"))
+        steps = workflow["jobs"]["publish"]["steps"]
+        names = [step["name"] for step in steps]
+        create = steps[names.index("Create draft release with verified assets")]
+        readback = steps[names.index("Download draft assets by release ID and compare published bytes")]
+        publish = steps[names.index("Publish verified draft and verify newly created Git tag")]
+        self.assertEqual("draft", create["id"])
+        self.assertIn("release_id=$release_id", create["run"])
+        self.assertIn("releases/$DRAFT_ID", readback["run"])
+        self.assertIn("releases/assets/$asset_id", readback["run"])
+        self.assertNotIn("git/ref/tags/$RELEASE_VERSION", readback["run"])
+        self.assertIn("sha256sum -c", readback["run"])
+        self.assertIn("cmp ", readback["run"])
+        self.assertIn("git/ref/tags/$RELEASE_VERSION", publish["run"])
+        self.assertIn("repos/$GITHUB_REPOSITORY/releases/$DRAFT_ID", publish["run"])
+
+    def test_recovery_requires_explicit_draft_id_and_original_attestation(self) -> None:
+        recovery_file = evidence.ROOT / ".github/workflows/recover-release-draft.yml"
+        workflow = yaml.safe_load(recovery_file.read_text(encoding="utf-8"))
+        events = workflow.get("on", workflow.get(True))
+        self.assertEqual(["release_id", "version"], sorted(events["workflow_dispatch"]["inputs"]))
+        self.assertEqual({"contents": "read"}, workflow["permissions"])
+        jobs = workflow["jobs"]
+        self.assertEqual({"contents": "read"}, jobs["preflight"]["permissions"])
+        self.assertEqual({"contents": "read"}, jobs["audit"]["permissions"])
+        self.assertEqual("./.github/workflows/security-audit.yml", jobs["audit"]["uses"])
+        self.assertEqual({"name": "release"}, jobs["publish"]["environment"])
+        self.assertEqual({"contents": "write", "attestations": "read"}, jobs["publish"]["permissions"])
+        self.assertEqual("audit", jobs["publish"]["needs"])
+        steps = jobs["publish"]["steps"]
+        self.assertFalse(any("actions/checkout@" in s.get("uses", "") for s in steps))
+        self.assertFalse(any("python " in s.get("run", "") for s in steps))
+        names = [s["name"] for s in steps]
+        self.assertLess(
+            names.index("Fetch exact draft assets and verify recorded SHA-256"),
+            names.index("Verify old attestation signature, signer and source commit"),
+        )
+        self.assertLess(
+            names.index("Verify old attestation signature, signer and source commit"),
+            names.index("Publish verified draft and verify Git tag target"),
+        )
+        scripts = "\n".join(s.get("run", "") for s in steps)
+        for mandatory in ("--cert-identity", "--source-digest", "--source-ref",
+                          "sha256sum -c", "compare/$source_sha...$GITHUB_SHA",
+                          ".draft == true", "git/ref/tags/$RELEASE_VERSION"):
+            self.assertIn(mandatory, scripts)
 
     def test_prepare_workflow_dispatches_required_checks(self) -> None:
         workflow_file = evidence.ROOT / ".github/workflows/prepare-release.yml"

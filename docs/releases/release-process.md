@@ -36,7 +36,17 @@ The workflow has six stages:
 
 The release notes include the workflow run URL and commit SHA. The preparation PR does **not** claim its version is published. Only the completed publication run establishes that fact.
 
-If the workflow fails after creating the draft release or tag, inspect the draft and recover manually. Publishing with assets is not atomic; the automation does not delete protected tags or overwrite an existing release.
+GitHub draft releases do **not** necessarily create a Git tag until publication. The workflow identifies a draft by its numeric release ID and reads its assets through the GitHub Releases API; the tag-to-commit check runs **after** publication. This matters because by-tag release lookup and Git ref lookup can return 404 on a valid draft. Release creation and asset upload are not atomic.
+
+### Recover a signed draft without deleting it
+
+If the publishing job fails after a draft and an attestation have been created, do **not** rerun Publish release or manually publish/delete the draft. Confirm that the original run signed the intended archive, then use [Recover verified release draft](../../.github/workflows/recover-release-draft.yml) manually from main.
+
+Enter the existing stable version and the **numeric Release ID** from the Releases API. The recovery job requires the protected release Environment and repeats the current SCA audit. Before publishing, it confirms the draft identity and intended source SHA, ensures that commit is an ancestor of current main, verifies the original archive/checksum and GitHub-stored asset digests, checks the original Sigstore attestation's signer workflow, source ref and commit, and requires that the Git tag does not already exist. It then publishes **the existing Draft by ID**, confirms creation of the tag, and checks that the new tag points to the original attested commit.
+
+Recovery is a separate, explicit approval step. It does not regenerate or silently replace assets, change the approved source commit, delete tags, or publish on its own. If verification fails, the Draft remains unpublished for manual investigation.
+
+For the 2026-11-23 partial publication of version 1.0.1, the recorded Draft ID is **455709541**, the original source commit is `8f6cd2ff748cca8af81dc54a06a426e4d2b0f1d5`, and the original attestation is [71200801](https://github.com/rodri-oliveira-dev/agentic-engineering-skills/attestations/71200801). These values identify the existing **unpublished** candidate; they are not evidence that recovery has succeeded. See [1.0.1 draft incident](1.0.1-draft-recovery.md).
 
 ## 3. Verify the release independently
 
