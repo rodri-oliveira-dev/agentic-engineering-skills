@@ -50,14 +50,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
-          if gh release view "$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo 'Release already exists.' >&2
-            exit 1
-          fi
-          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_VERSION" >/dev/null 2>&1; then
-            echo 'Tag already exists.' >&2
-            exit 1
-          fi
+          require_absent_api_resource() {
+            local path="$1"
+            local status
+            status=$(curl --silent --show-error --max-time 20 \
+              --output "$RUNNER_TEMP/release-api-response.json" \
+              --write-out '%{http_code}' \
+              --header "Accept: application/vnd.github+json" \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/$path")
+            if [[ "$status" != '404' ]]; then
+              echo "Expected 404 for $path, got HTTP $status. Refusing release." >&2
+              exit 1
+            fi
+          }
+          require_absent_api_resource "git/ref/tags/$RELEASE_VERSION"
+          require_absent_api_resource "releases/tags/$RELEASE_VERSION"
 
   audit:
     name: Supply-chain validation
@@ -150,14 +158,22 @@ jobs:
             echo 'Main advanced; rerun Publish release from current main.' >&2
             exit 1
           fi
-          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_VERSION" >/dev/null 2>&1; then
-            echo 'Existing release tag cannot be overwritten.' >&2
-            exit 1
-          fi
-          if gh release view "$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo 'Existing release cannot be overwritten.' >&2
-            exit 1
-          fi
+          require_absent_api_resource() {
+            local path="$1"
+            local status
+            status=$(curl --silent --show-error --max-time 20 \
+              --output "$RUNNER_TEMP/release-api-response.json" \
+              --write-out '%{http_code}' \
+              --header "Accept: application/vnd.github+json" \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/$path")
+            if [[ "$status" != '404' ]]; then
+              echo "Expected 404 for $path, got HTTP $status. Refusing release." >&2
+              exit 1
+            fi
+          }
+          require_absent_api_resource "git/ref/tags/$RELEASE_VERSION"
+          require_absent_api_resource "releases/tags/$RELEASE_VERSION"
       - name: Enforce patched GitHub CLI for signer verification
         run: |
           GH_VERSION=$(gh --version | head -n1 | awk '{print $3}')
@@ -218,6 +234,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
+          TAG_SHA=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_VERSION" --jq '.object.sha')
+          if [[ "$TAG_SHA" != "$GITHUB_SHA" ]]; then
+            echo "Draft release tag does not match the validated source commit." >&2
+            exit 1
+          fi
           mkdir -p "$RUNNER_TEMP/release-readback"
           gh release download "$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" \
             --pattern "agentic-engineering-$RELEASE_VERSION.zip*" \
