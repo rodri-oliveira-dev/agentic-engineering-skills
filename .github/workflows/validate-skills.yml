@@ -52,5 +52,10 @@ jobs:
       - name: Validate skills and local references
         run: python scripts/validate_skills.py --require-skills
 
+      - name: Verify generated plugin distribution
+        run: |
+          python scripts/package_plugins.py check
+          python scripts/package_plugins.py verify
+
       - name: Validate behavioral scenario coverage and records
         run: python scripts/evaluate_scenarios.py check

@@ -1,0 +1,16 @@
+{
+  "author": {
+    "name": "rodri-oliveira-dev",
+    "url": "https://github.com/rodri-oliveira-dev"
+  },
+  "description": "Reusable software-engineering workflows for design, review, debugging, delivery, documentation, SQL, and testing.",
+  "keywords": [
+    "agent-skills",
+    "software-engineering",
+    "developer-tools"
+  ],
+  "license": "MIT",
+  "name": "agentic-engineering",
+  "repository": "https://github.com/rodri-oliveira-dev/agentic-engineering-skills",
+  "version": "1.0.0"
+}

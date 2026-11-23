@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "description": "Agentic Engineering Skills plugin marketplace.",
+    "version": "1.0.0"
+  },
+  "name": "agentic-engineering-skills",
+  "owner": {
+    "name": "rodri-oliveira-dev"
+  },
+  "plugins": [
+    {
+      "description": "Reusable software-engineering workflows for design, review, debugging, delivery, documentation, SQL, and testing.",
+      "name": "agentic-engineering",
+      "source": "./plugins/agentic-engineering",
+      "version": "1.0.0"
+    }
+  ]
+}
