@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -60,6 +62,30 @@ class ReleaseAutomationTests(unittest.TestCase):
                     releases.prepare("v1.0.1", "Invalid", root)
                 run.assert_not_called()
             self.assertEqual("1.0.0", releases.get_current_version(root))
+
+    def test_prepares_real_distribution_in_isolated_directory(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for dirname in (".agents", ".github/plugin", ".claude-plugin", "plugins/agentic-engineering"):
+                source = repository / dirname
+                destination = root / dirname
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(source, destination)
+            (root / "scripts").mkdir()
+            shutil.copy2(
+                repository / "scripts/package_plugins.py",
+                root / "scripts/package_plugins.py",
+            )
+            major, minor, patch_version = releases.version_tuple(releases.get_current_version(root))
+            candidate = f"{major}.{minor}.{patch_version + 1}"
+            releases.prepare(candidate, "- Maintenance update", root)
+            releases.validate(candidate, root)
+            for operation in ("check", "verify"):
+                subprocess.run(
+                    [sys.executable, str(root / "scripts/package_plugins.py"), operation],
+                    cwd=root, check=True, capture_output=True, text=True,
+                )
 
     def test_validate_fails_closed_on_inconsistent_manifests_and_notes(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
