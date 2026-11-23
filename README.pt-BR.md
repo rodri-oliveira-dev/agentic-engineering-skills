@@ -6,7 +6,7 @@
 
 Uma biblioteca gratuita e open source de dez workflows reutilizáveis de engenharia de software para agentes. A fonte canônica e neutra em relação a fornecedores existe somente em `.agents/skills/`; os pacotes gerados para marketplaces derivam dela. OpenAI Codex é a plataforma prioritária.
 
-A versão [`1.0.0`](https://github.com/rodri-oliveira-dev/agentic-engineering-skills/releases/tag/1.0.0) está publicada. Publicação e validação estrutural não comprovam comportamento em agentes reais; consulte o [registro de publicação](docs/releases/1.0.0-publication.md) para conhecer as evidências e limitações restantes.
+As versões publicadas estão disponíveis em [GitHub Releases](https://github.com/rodri-oliveira-dev/agentic-engineering-skills/releases). O [registro histórico da publicação 1.0.0](docs/releases/1.0.0-publication.md) permanece preservado. Publicação e validação estrutural não comprovam comportamento em agentes reais.
 
 ## Instalação rápida
 
@@ -101,7 +101,7 @@ Edite somente `.agents/skills/`. Regenere a saída de marketplace apenas quando 
 
 Leia [Como contribuir](CONTRIBUTING.md) e o [contrato de autoria de skills](docs/skill-authoring.md), adicione evidências focadas e informe somente verificações realmente executadas. Relate vulnerabilidades de forma privada conforme a [política de segurança](SECURITY.md).
 
-Os resultados de auditoria da cadeia de suprimentos e as atestações de releases futuras estão descritos na [avaliação de segurança](docs/security/supply-chain-assessment.md) e no [registro de riscos](docs/security/risk-register.md).
+Os controles da cadeia de suprimentos estão descritos na [avaliação de segurança](docs/security/supply-chain-assessment.md), no [registro de riscos](docs/security/risk-register.md) e no [processo de publicação](docs/releases/release-process.md).
 
 ## Licença e documentação adicional
 

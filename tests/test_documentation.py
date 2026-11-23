@@ -168,11 +168,11 @@ class DocumentationTests(unittest.TestCase):
     def test_distribution_guide_uses_the_generated_marketplace_identity(self) -> None:
         guide = (REPOSITORY_ROOT / "docs/distribution.md").read_text(encoding="utf-8")
         plugin_id = "agentic-engineering@agentic-engineering-skills"
-        version = current_plugin_version()
+        historical_tested_tag = "1.0.0"
         required_commands = {
             "npx skills add rodri-oliveira-dev/agentic-engineering-skills --list",
             "codex plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills",
-            f"codex plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills --ref {version}",
+            f"codex plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills --ref {historical_tested_tag}",
             f"codex plugin add {plugin_id}",
             "copilot plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills",
             f"copilot plugin install {plugin_id}",
@@ -197,10 +197,12 @@ class DocumentationTests(unittest.TestCase):
         }
         commands = {name: set(command_pattern.findall(content)) for name, content in contents.items()}
         self.assertEqual(commands["README.md"], commands["README.pt-BR.md"])
-        version = current_plugin_version()
         for content in contents.values():
-            self.assertIn(f"releases/tag/{version}", content)
-            self.assertIn(f"docs/releases/{version}-publication.md", content)
+            self.assertIn("github.com/rodri-oliveira-dev/agentic-engineering-skills/releases", content)
+            self.assertIn("docs/releases/1.0.0-publication.md", content)
+
+        # A prepared version is not a published release. Do not require README
+        # publication claims to match an unmerged or unreleased manifest version.
 
     def test_release_records_cross_link_without_rewriting_history(self) -> None:
         release_directory = REPOSITORY_ROOT / "docs" / "releases"

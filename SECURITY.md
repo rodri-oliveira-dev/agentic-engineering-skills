@@ -5,7 +5,7 @@
 | Version or line | Security-fix status |
 | --- | --- |
 | Default branch (`main`) | Receives current security corrections |
-| Latest stable release (`1.0.0`) | Supported; a fix may require users to update to a newer stable release when one is published |
+| [Latest stable release](https://github.com/rodri-oliveira-dev/agentic-engineering-skills/releases) | Supported; a fix may require users to upgrade when a newer stable release is published |
 | Versions older than `1.0.0` | Not supported |
 
 This small open source project does not promise response times, guaranteed backports, long-term support, or continued support for a fixed release. Maintainers assess reports against the current default branch and latest stable release, then document any affected versions and available remediation. Publication of a fix depends on validation and maintainer capacity.
