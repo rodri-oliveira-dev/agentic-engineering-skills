@@ -10,6 +10,9 @@ This register tracks **open risk conditions and evidence gaps**, not confirmed u
 | SC-004 | Pinned GitHub Actions SHAs do not establish publisher trust | Review upstream source and Dependabot proposals before merging | Open, manual review |
 | SC-005 | Copilot CLI, Claude Code and live agent behavior remain outside supply-chain checks | Run separate installation and behavioral evaluations and record evidence | Open, compatibility work |
 | SC-006 | Release workflow requires OIDC and a release-scoped token with write permission | Review tag/release rulesets; scope permissions to release job; verify the first release run | Open, review new control |
+| SC-007 | Existing tag protection matches `v*` but the release uses `1.0.0` | Adjust GitHub tag ruleset to cover the actual naming convention; verify immutability before the next release | Open, administrative blocker |
+| SC-008 | Branch ruleset does not yet require the new supply-chain audit check | After the workflow is merged and has a successful `main` run, add the audit job to required status checks | Open, administrative action |
+| SC-009 | Release provenance path has not been exercised end to end | Use a controlled future release to validate permission, OIDC signing, artifact verification and GitHub Release attachment | Open, runtime validation |
 
 ## Decision record
 
