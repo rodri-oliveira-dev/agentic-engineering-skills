@@ -66,6 +66,14 @@ jobs:
           }
           require_absent_api_resource "git/ref/tags/$RELEASE_VERSION"
           require_absent_api_resource "releases/tags/$RELEASE_VERSION"
+          # GitHub does not expose unpublished drafts through the by-tag endpoint.
+          # Check the release collection as well, otherwise a failed draft can be ignored.
+          existing=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" |
+            jq --arg tag "$RELEASE_VERSION" '[.[] | select(.tag_name == $tag)] | length')
+          if [[ "$existing" != '0' ]]; then
+            echo "A release or draft for $RELEASE_VERSION already exists. Use Recover release draft after reviewing its assets." >&2
+            exit 1
+          fi
 
   audit:
     name: Supply-chain validation
@@ -218,6 +226,7 @@ jobs:
           This release provides an attested ZIP and a SHA-256 checksum.
           EOF
       - name: Create draft release with verified assets
+        id: draft
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ inputs.version }}
@@ -229,34 +238,93 @@ jobs:
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
             --title "v$RELEASE_VERSION" \
             --notes-file dist/release-notes.md --draft
-      - name: Download draft assets and compare published bytes
+
+          # Drafts have a release ID, but the Git tag need not exist yet.
+          release_list=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100")
+          release_id=$(jq -r --arg tag "$RELEASE_VERSION" --arg commit "$GITHUB_SHA" '
+            [.[] | select(.tag_name == $tag and .draft == true and .target_commitish == $commit)]
+            | if length == 1 then .[0].id else empty end
+          ' <<< "$release_list")
+          if ! [[ "$release_id" =~ ^[0-9]+$ ]]; then
+            echo "Could not uniquely identify the newly created draft; manual recovery is required." >&2
+            exit 1
+          fi
+          echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
+
+      - name: Download draft assets by release ID and compare published bytes
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ inputs.version }}
+          DRAFT_ID: ${{ steps.draft.outputs.release_id }}
         run: |
-          TAG_SHA=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_VERSION" --jq '.object.sha')
-          if [[ "$TAG_SHA" != "$GITHUB_SHA" ]]; then
-            echo "Draft release tag does not match the validated source commit." >&2
+          if ! [[ "$DRAFT_ID" =~ ^[0-9]+$ ]]; then
+            echo "Missing numeric draft ID" >&2
             exit 1
           fi
+          metadata=$(gh api "repos/$GITHUB_REPOSITORY/releases/$DRAFT_ID")
+          jq -e --arg tag "$RELEASE_VERSION" --arg commit "$GITHUB_SHA" '
+            .draft == true and .tag_name == $tag and .target_commitish == $commit and
+            ((.assets | map(.name) | sort) ==
+             (["agentic-engineering-" + $tag + ".zip",
+               "agentic-engineering-" + $tag + ".zip.sha256",
+               "attestation-verification.json"] | sort)) and
+            (.assets | all(.state == "uploaded"))
+          ' <<< "$metadata" >/dev/null
+
           mkdir -p "$RUNNER_TEMP/release-readback"
-          gh release download "$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" \
-            --pattern "agentic-engineering-$RELEASE_VERSION.zip*" \
-            --dir "$RUNNER_TEMP/release-readback"
+          for name in "agentic-engineering-$RELEASE_VERSION.zip" \
+                      "agentic-engineering-$RELEASE_VERSION.zip.sha256" \
+                      "attestation-verification.json"; do
+            asset_id=$(jq -r --arg name "$name" '.assets[] | select(.name == $name) | .id' <<< "$metadata")
+            if ! [[ "$asset_id" =~ ^[0-9]+$ ]]; then
+              echo "Missing draft asset ID for $name" >&2
+              exit 1
+            fi
+            downloaded="$RUNNER_TEMP/release-readback/$name"
+            curl --fail --silent --show-error --location --retry 3 --max-time 90 \
+              --header "Accept: application/octet-stream" \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/assets/$asset_id" \
+              --output "$downloaded"
+            local_digest=$(sha256sum "$downloaded" | awk '{print $1}')
+            published_digest=$(jq -r --arg name "$name" \
+              '.assets[] | select(.name == $name) | .digest' <<< "$metadata")
+            if [[ "$published_digest" != "sha256:$local_digest" ]]; then
+              echo "GitHub metadata digest mismatch for $name" >&2
+              exit 1
+            fi
+            cmp "dist/$name" "$downloaded"
+          done
           (
             cd "$RUNNER_TEMP/release-readback"
             sha256sum -c "agentic-engineering-$RELEASE_VERSION.zip.sha256"
           )
-          cmp "dist/agentic-engineering-$RELEASE_VERSION.zip" \
-            "$RUNNER_TEMP/release-readback/agentic-engineering-$RELEASE_VERSION.zip"
-          cmp "dist/agentic-engineering-$RELEASE_VERSION.zip.sha256" \
-            "$RUNNER_TEMP/release-readback/agentic-engineering-$RELEASE_VERSION.zip.sha256"
-      - name: Publish after successful artifact readback
+
+      - name: Publish verified draft and verify newly created Git tag
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ inputs.version }}
+          DRAFT_ID: ${{ steps.draft.outputs.release_id }}
         run: |
-          gh release edit "$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" --draft=false --latest
-          gh release view "$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" \
-            --json url,isDraft,tagName,assets \
-            --jq '{url, isDraft, tagName, assetNames: [.assets[].name]}'
+          # Publishing is not atomic; failures here require inspecting the Release.
+          published=$(gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$DRAFT_ID" \
+            -F draft=false)
+          jq -e --arg tag "$RELEASE_VERSION" --arg commit "$GITHUB_SHA" '
+            .draft == false and .tag_name == $tag and
+            .target_commitish == $commit and .published_at != null
+          ' <<< "$published" >/dev/null
+
+          tag_json=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_VERSION")
+          tag_type=$(jq -r '.object.type' <<< "$tag_json")
+          tag_sha=$(jq -r '.object.sha' <<< "$tag_json")
+          if [[ "$tag_type" == 'tag' ]]; then
+            tag_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_sha" --jq '.object.sha')
+          elif [[ "$tag_type" != 'commit' ]]; then
+            echo "Unexpected tag object type after publication" >&2
+            exit 1
+          fi
+          if [[ "$tag_sha" != "$GITHUB_SHA" ]]; then
+            echo "Published Git tag does not resolve to the validated source commit" >&2
+            exit 1
+          fi
+          echo "Published verified release $RELEASE_VERSION from $GITHUB_SHA"
