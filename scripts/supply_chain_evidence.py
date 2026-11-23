@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PINNED_REQUIREMENT = re.compile(r"^([a-zA-Z0-9_.-]+)==([a-zA-Z0-9_.+!-]+)$")
 ACTION_USE = re.compile(r"^\s*(?:-\s*)?uses:\s*([^\s#]+)", re.MULTILINE)
 REMOTE_ACTION = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)?@[0-9a-f]{40}$")
+LOCAL_WORKFLOW = re.compile(r"^\./\.github/workflows/[A-Za-z0-9_.-]+\.ya?ml$")
 SAFE_VERSION = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$")
 
 
@@ -53,7 +54,11 @@ def action_inventory() -> list[dict[str, str]]:
     workflows = sorted(path for path in workflow_dir.iterdir() if path.suffix in {".yml", ".yaml"})
     for workflow in workflows:
         for value in ACTION_USE.findall(workflow.read_text(encoding="utf-8")):
-            if not REMOTE_ACTION.fullmatch(value):
+            if LOCAL_WORKFLOW.fullmatch(value):
+                local = ROOT / value.removeprefix("./")
+                if not local.is_file() or local.is_symlink():
+                    raise ValueError(f"Missing or unsafe reusable workflow in {workflow.name}: {value}")
+            elif not REMOTE_ACTION.fullmatch(value):
                 raise ValueError(f"Unpinned or unsupported action in {workflow.name}: {value}")
             actions.append({"workflow": workflow.relative_to(ROOT).as_posix(), "reference": value})
     return actions
