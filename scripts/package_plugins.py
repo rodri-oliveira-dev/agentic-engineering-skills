@@ -55,6 +55,11 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _lf_bytes(content: bytes) -> bytes:
+    """Return portable text bytes independent of checkout line endings."""
+    return content.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+
+
 def _path_exists(path: Path) -> bool:
     return path.exists() or path.is_symlink()
 
@@ -120,7 +125,7 @@ def _canonical_files(catalog: Path) -> dict[str, bytes]:
         if "SKILL.md" not in skill_files:
             raise PackageError(f"canonical skill is missing SKILL.md: {skill.name}")
         for relative, source in skill_files.items():
-            output[f"skills/{skill.name}/{relative}"] = source.read_bytes()
+            output[f"skills/{skill.name}/{relative}"] = _lf_bytes(source.read_bytes())
     return output
 
 
@@ -217,7 +222,7 @@ def expected_distribution(catalog: Path) -> dict[str, bytes]:
     package_files = _canonical_files(catalog)
     package_files["plugin.json"] = _portable_manifest()
     package_files[".claude-plugin/plugin.json"] = _claude_manifest()
-    package_files["LICENSE"] = (REPOSITORY_ROOT / "LICENSE").read_bytes()
+    package_files["LICENSE"] = _lf_bytes((REPOSITORY_ROOT / "LICENSE").read_bytes())
     package_files = dict(sorted(package_files.items()))
     inventory = {
         "schema_version": 1,

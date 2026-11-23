@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 import tempfile
 import unittest
@@ -359,6 +360,20 @@ class PackagePluginTests(unittest.TestCase):
 
         self.assertEqual(snapshot(first), snapshot(second))
 
+    def test_generation_is_independent_of_checkout_line_endings(self) -> None:
+        crlf_catalog = self.root / "crlf-canonical"
+        shutil.copytree(self.catalog, crlf_catalog)
+        for path in crlf_catalog.rglob("*"):
+            if path.is_file():
+                path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
+
+        lf_output = self.root / "lf-output"
+        crlf_output = self.root / "crlf-output"
+        generate_distribution(catalog=self.catalog, output_root=lf_output)
+        generate_distribution(catalog=crlf_catalog, output_root=crlf_output)
+
+        self.assertEqual(snapshot(lf_output), snapshot(crlf_output))
+
     def test_check_detects_canonical_change_and_derived_edit(self) -> None:
         output = self.root / "output"
         generate_distribution(catalog=self.catalog, output_root=output)
@@ -439,7 +454,10 @@ class CheckedInDistributionTests(unittest.TestCase):
     def test_checked_in_package_files_match_the_canonical_catalog_byte_for_byte(self) -> None:
         package_skills = REPOSITORY_ROOT / PLUGIN_RELATIVE / "skills"
 
-        canonical = snapshot(DEFAULT_CATALOG)
+        canonical = {
+            relative: content.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+            for relative, content in snapshot(DEFAULT_CATALOG).items()
+        }
         distributed = snapshot(package_skills)
 
         self.assertEqual(canonical, distributed)
