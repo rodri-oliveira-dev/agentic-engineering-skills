@@ -4,7 +4,7 @@ This document defines the **post-release supply-chain assessment process** for A
 
 ## Automated evidence
 
-The [Supply chain audit workflow](../../.github/workflows/security-audit.yml) runs on pull requests and pushes to `main`, weekly, manually, and when a GitHub Release is published. It uses Python 3.11 and `pip-audit==2.10.1`.
+The [Supply chain audit workflow](../../.github/workflows/security-audit.yml) runs on pull requests and pushes to `main`, weekly, manually, and when invoked as a reusable workflow by the controlled [Publish release](../../.github/workflows/publish-release.yml) action. It uses Python 3.11 and `pip-audit==2.10.1`.
 
 Artifacts from the audit job, retained for 30 days:
 
@@ -45,21 +45,15 @@ The local audit environment and output directories are ignored by Git.
 
 ## Future release provenance
 
-For GitHub Releases published **after this workflow merges**, a read-only build job requires a successful SCA/inventory job, checks out the immutable event commit (`github.sha`), verifies package integrity and version matching, and builds a reproducible ZIP plus SHA-256 checksum. It stages the candidate as an immutable workflow artifact. A separate privileged job downloads that artifact by its ID, rejects artifact digest or checksum mismatches, verifies that the tag still resolves to the triggering commit, and requests an `actions/attest` build-provenance attestation before uploading the ZIP and checksum as Release assets. Only this isolated publishing job receives `contents: write`, `id-token: write` and `attestations: write`; it never checks out or executes repository-controlled Python scripts.
+Future releases are prepared in a version-bump PR using [Prepare release](../../.github/workflows/prepare-release.yml), reviewed and merged to main, and only then published manually through [Publish release](../../.github/workflows/publish-release.yml). The full procedure and administrative prerequisites are documented in the [release process](../releases/release-process.md).
 
-Verify a downloaded archive:
+The release audit is reused with **read-only** permissions. The read-only builder creates the versioned ZIP and checksum and stages an immutable workflow artifact. The only job with `contents: write`, `id-token: write` and `attestations: write` is the separate publisher, gated by the GitHub Environment named `release`. A GitHub Environment approval is enforced **only after required reviewers have actually been configured in repository Settings**.
 
-```shell
-gh attestation verify agentic-engineering-VERSION.zip --repo rodri-oliveira-dev/agentic-engineering-skills
-```
+The privileged publisher does not check out or execute repository Python code. It downloads the exact staged artifact ID, validates SHA-256, confirms that main is unchanged and the tag does not exist, signs the ZIP with OIDC, and uses `gh attestation verify` to check the exact signer certificate, source ref and SHA. The workflow requires GitHub CLI version 2.102.0 or later. A draft GitHub Release is created with ZIP, checksum and verification JSON; the publisher checks the downloaded assets match the build before making it public.
 
-Also compare the archive's hash to the published `.sha256` file. The attestation binds the bytes to a future GitHub Actions run; it does not prove agent behavior. If the repository cannot issue attestations, the release job fails rather than silently publishing an unattested ZIP.
+The GitHub release and asset APIs are not atomic. In the event of a failed draft or upload, a draft release or tag may remain and require manual recovery; the workflow refuses to delete or replace an existing tag/release. User-facing verification commands are in the [release process](../releases/release-process.md).
 
-The publishing job relies on GitHub-hosted `gh`, `jq` and `sha256sum` and on the repository's release/tag permissions. The attestation flow has **not been exercised by a real release** yet; the pull-request CI validates only the nonprivileged audit path and structural tests. Version `1.0.0` predates these controls and **has no project-built attested ZIP or project checksum**. The new workflow does not attest the historical release retroactively.
-
-## Repository administration required
-
-At the review date, the repository tag ruleset protects `refs/tags/v*`, whereas the released tag is `1.0.0` without `v`. Extend tag immutability protection to the actual tag naming convention (and future tags) in GitHub Settings before relying on stable tag identity. The branch ruleset currently requires the Linux/Windows validation checks but not the new `SCA, SBOM and provenance inventory` check. After this workflow is merged and a successful run exists on `main`, add that check to required status checks. Repository rulesets are administrative settings and are **not changed by this PR**.
+Version `1.0.0` predates these controls and was not retroactively attested. The protected publisher has not yet been tested by a real future release; PR and main checks establish only the read-only audit and structural workflow contracts.
 
 ## Manual review and residual risk
 

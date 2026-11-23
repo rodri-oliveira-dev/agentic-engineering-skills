@@ -6,7 +6,7 @@
 
 A free, open source library of ten reusable software-engineering workflows for agents. The vendor-neutral, canonical source lives only in `.agents/skills/`; generated marketplace packages are derived from it. OpenAI Codex is the priority platform.
 
-Version [`1.0.0`](https://github.com/rodri-oliveira-dev/agentic-engineering-skills/releases/tag/1.0.0) is published. Publication and structural validation do not prove live-agent behavior; see the [publication record](docs/releases/1.0.0-publication.md) for the exact evidence and remaining limitations.
+Published versions are listed under [GitHub Releases](https://github.com/rodri-oliveira-dev/agentic-engineering-skills/releases). The [original 1.0.0 publication record](docs/releases/1.0.0-publication.md) is retained as historical evidence. Publication and structural validation alone do not prove live-agent behavior.
 
 ## Quick installation
 
@@ -101,7 +101,7 @@ Edit only `.agents/skills/`. Regenerate marketplace output only when canonical s
 
 Read [Contributing](CONTRIBUTING.md) and the [skill authoring contract](docs/skill-authoring.md), add focused evidence, and report only checks actually run. Report vulnerabilities privately according to the [security policy](SECURITY.md).
 
-Supply-chain audit results and future release attestations are described in the [security assessment](docs/security/supply-chain-assessment.md) and [risk register](docs/security/risk-register.md).
+Supply-chain controls are described in the [security assessment](docs/security/supply-chain-assessment.md), [risk register](docs/security/risk-register.md), and [release process](docs/releases/release-process.md).
 
 ## License and additional documentation
 
