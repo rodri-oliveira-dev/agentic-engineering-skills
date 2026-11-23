@@ -57,6 +57,26 @@ class SupplyChainEvidenceTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "Unpinned"):
                     evidence.action_inventory()
 
+    def test_local_reusable_workflow_is_resolved_inside_repository(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workflows = root / ".github/workflows"
+            workflows.mkdir(parents=True)
+            (workflows / "audit.yml").write_text("jobs: {}\n", encoding="utf-8")
+            caller = workflows / "caller.yml"
+            caller.write_text(
+                "jobs:\n  audit:\n    uses: ./.github/workflows/audit.yml\n",
+                encoding="utf-8",
+            )
+            with patch.object(evidence, "ROOT", root):
+                self.assertEqual(1, len(evidence.action_inventory()))
+            caller.write_text(
+                "jobs:\n  audit:\n    uses: ./../../../outside.yml\n", encoding="utf-8"
+            )
+            with patch.object(evidence, "ROOT", root):
+                with self.assertRaisesRegex(ValueError, "Unpinned"):
+                    evidence.action_inventory()
+
     def test_release_workflow_is_manually_gated_and_uses_read_only_build(self) -> None:
         audit_file = evidence.ROOT / ".github/workflows/security-audit.yml"
         release_file = evidence.ROOT / ".github/workflows/publish-release.yml"
