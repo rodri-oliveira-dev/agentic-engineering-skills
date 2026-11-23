@@ -101,6 +101,8 @@ Edit only `.agents/skills/`. Regenerate marketplace output only when canonical s
 
 Read [Contributing](CONTRIBUTING.md) and the [skill authoring contract](docs/skill-authoring.md), add focused evidence, and report only checks actually run. Report vulnerabilities privately according to the [security policy](SECURITY.md).
 
+Supply-chain audit results and future release attestations are described in the [security assessment](docs/security/supply-chain-assessment.md) and [risk register](docs/security/risk-register.md).
+
 ## License and additional documentation
 
 The project is licensed under the [MIT License](LICENSE). Known dependency and attribution information is in [third-party notices](THIRD_PARTY_NOTICES.md). Additional documentation includes the [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), and [distribution architecture](docs/distribution-architecture.md).

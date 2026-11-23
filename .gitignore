@@ -30,3 +30,8 @@ test-results/
 dist/
 build/
 /.claude/skills/
+
+# Local supply-chain audit environments and evidence
+.venv-audit/
+.audit-downloads/
+security-evidence/

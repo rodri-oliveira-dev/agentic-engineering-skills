@@ -7,6 +7,7 @@ The development and validation environment uses the following separately distrib
 | Component | Purpose | License | Distribution in this repository |
 | --- | --- | --- | --- |
 | [PyYAML 6.0.4](https://pypi.org/project/PyYAML/6.0.4/) | Parse YAML frontmatter during structural validation | MIT | Version pinned in `requirements.txt`; package is not vendored |
+| [pip-audit 2.10.1](https://pypi.org/project/pip-audit/2.10.1/) | CI vulnerability audit and CycloneDX generation | Apache-2.0 | Installed as a pinned auditing tool; not bundled in skills or plugins |
 | [actions/checkout](https://github.com/actions/checkout) | Check out source in CI | MIT | Referenced by immutable commit in the workflow; not vendored |
 | [actions/setup-python](https://github.com/actions/setup-python) | Provision Python in CI | MIT | Referenced by immutable commit in the workflow; not vendored |
 
