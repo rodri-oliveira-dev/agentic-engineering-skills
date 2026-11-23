@@ -4,6 +4,7 @@ import hashlib
 import sys
 import tempfile
 import unittest
+import yaml
 from argparse import Namespace
 from pathlib import Path
 from unittest.mock import patch
@@ -34,6 +35,57 @@ class SupplyChainEvidenceTests(unittest.TestCase):
             with patch.object(evidence, "ROOT", root):
                 with self.assertRaisesRegex(ValueError, "Unpinned"):
                     evidence.action_inventory()
+
+    def test_all_supported_workflow_extensions_are_scanned(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workflows = root / ".github/workflows"
+            workflows.mkdir(parents=True)
+            sha = "a" * 40
+            (workflows / "one.yml").write_text(
+                f"steps:\n  - uses: actions/checkout@{sha}\n", encoding="utf-8"
+            )
+            (workflows / "two.yaml").write_text(
+                f"steps:\n  - uses: actions/setup-python@{sha}\n", encoding="utf-8"
+            )
+            with patch.object(evidence, "ROOT", root):
+                self.assertEqual(2, len(evidence.action_inventory()))
+            (workflows / "two.yaml").write_text(
+                "steps:\n  - uses: actions/setup-python@main\n", encoding="utf-8"
+            )
+            with patch.object(evidence, "ROOT", root):
+                with self.assertRaisesRegex(ValueError, "Unpinned"):
+                    evidence.action_inventory()
+
+    def test_release_publication_has_isolated_token_permissions(self) -> None:
+        workflow_file = evidence.ROOT / ".github/workflows/security-audit.yml"
+        workflow = yaml.safe_load(workflow_file.read_text(encoding="utf-8"))
+        self.assertEqual({"contents": "read"}, workflow["permissions"])
+        jobs = workflow["jobs"]
+        audit = jobs["audit"]
+        builder = jobs["release-package"]
+        publisher = jobs["release-provenance"]
+        self.assertEqual({"contents": "read"}, builder["permissions"])
+        self.assertEqual("audit", builder["needs"])
+        self.assertEqual("release-package", publisher["needs"])
+        self.assertEqual(
+            {"contents": "write", "id-token": "write", "attestations": "write"},
+            publisher["permissions"],
+        )
+        self.assertTrue(
+            any("actions/checkout@" in step.get("uses", "") for step in builder["steps"])
+        )
+        self.assertFalse(
+            any("actions/checkout@" in step.get("uses", "") for step in publisher["steps"])
+        )
+        self.assertFalse(
+            any("python " in step.get("run", "") for step in publisher["steps"])
+        )
+        self.assertTrue(
+            any("download-artifact@" in step.get("uses", "") for step in publisher["steps"])
+        )
+        self.assertEqual("${{ github.sha }}", audit["steps"][0]["with"]["ref"])
+        self.assertEqual("${{ github.sha }}", builder["steps"][0]["with"]["ref"])
 
     def test_release_archive_is_reproducible_and_checksum_is_correct(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
