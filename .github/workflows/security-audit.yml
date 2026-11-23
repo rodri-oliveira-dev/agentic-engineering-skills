@@ -33,6 +33,7 @@ jobs:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up Python
@@ -98,22 +99,22 @@ jobs:
           done
           echo 'SCA, CycloneDX SBOM, package integrity and provenance inventory passed.'
 
-  release-provenance:
-    name: Attest next release package
+  release-package:
+    name: Build release candidate (read-only)
     if: github.event_name == 'release' && github.event.action == 'published'
     needs: audit
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
-      contents: write
-      id-token: write
-      attestations: write
+      contents: read
+    outputs:
+      artifact_id: ${{ steps.stage.outputs.artifact-id }}
 
     steps:
-      - name: Check out the published release tag
+      - name: Check out event commit (not mutable tag name)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up Python
@@ -126,28 +127,71 @@ jobs:
           python scripts/package_plugins.py check
           python scripts/package_plugins.py verify
 
-      - name: Build deterministic archive and checksum
+      - name: Build deterministic release archive and checksum
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          python scripts/supply_chain_evidence.py package --tag "$RELEASE_TAG" --output "dist/agentic-engineering-${RELEASE_TAG}.zip"
+          python scripts/supply_chain_evidence.py package --tag "$RELEASE_TAG" --output "dist/agentic-engineering-$(printf %s "$RELEASE_TAG").zip"
+          cd dist
+          sha256sum -c ./*.sha256
 
-      - name: Attest the exact archive bytes
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
-        with:
-          subject-path: dist/agentic-engineering-*.zip
-
-      - name: Upload immutable workflow evidence
+      - name: Stage immutable candidate artifact
+        id: stage
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: attested-release-${{ github.event.release.tag_name }}-${{ github.run_id }}
+          name: release-candidate-${{ github.run_id }}
           path: |
             dist/*.zip
             dist/*.sha256
           if-no-files-found: error
           retention-days: 90
 
-      - name: Attach the attested package and checksum to GitHub Release
+  release-provenance:
+    name: Attest and publish release (privileged)
+    if: github.event_name == 'release' && github.event.action == 'published'
+    needs: release-package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Download exactly the verified build-job artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ needs.release-package.outputs.artifact_id }}
+          path: dist
+          digest-mismatch: error
+
+      - name: Verify downloaded checksum and event tag integrity
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          cd dist
+          sha256sum -c ./*.sha256
+          ref_json=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG")
+          ref_type=$(jq -r '.object.type' <<< "$ref_json")
+          ref_sha=$(jq -r '.object.sha' <<< "$ref_json")
+          if [[ "$ref_type" == "tag" ]]; then
+            ref_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$ref_sha" --jq '.object.sha')
+          elif [[ "$ref_type" != "commit" ]]; then
+            echo "Unsupported tag object type" >&2
+            exit 1
+          fi
+          if [[ "$ref_sha" != "$GITHUB_SHA" ]]; then
+            echo "Release tag no longer resolves to the triggering commit" >&2
+            exit 1
+          fi
+
+      - name: Attest the verified archive bytes
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/agentic-engineering-*.zip
+
+      - name: Attach attested package and checksum to the release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
