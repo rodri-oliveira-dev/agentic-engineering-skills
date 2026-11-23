@@ -21,7 +21,7 @@ if sys.version_info < (3, 11):
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CATALOG = REPOSITORY_ROOT / ".agents" / "skills"
 PLUGIN_NAME = "agentic-engineering"
-PLUGIN_VERSION = "1.0.0"
+PLUGIN_VERSION = "1.0.1"
 PLUGIN_DESCRIPTION = (
     "Reusable software-engineering workflows for design, review, debugging, "
     "delivery, documentation, SQL, and testing."

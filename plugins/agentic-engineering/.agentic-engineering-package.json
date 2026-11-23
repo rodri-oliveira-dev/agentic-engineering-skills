@@ -1,9 +1,9 @@
 {
   "canonical_source": ".agents/skills",
   "files": {
-    ".claude-plugin/plugin.json": "57334ce42cdfbb89f3673f6f38f074180654797eb9c39ff981ed7934512d11a7",
+    ".claude-plugin/plugin.json": "237b4dc5c63a09cfbcb7d0ebffcfdf4f77bc605f5fd516edf8e650396ee6dff3",
     "LICENSE": "34d73049b7da749b3b4a0047e94a795594eecae53c48e6843181b6643d415ff2",
-    "plugin.json": "dbdb786ad27812ccd0c40e609df07293a318977c6874b6f96f81d5bf0be54ff8",
+    "plugin.json": "9d2cc7c5a1baeff9b95f4610e74be89d419cc4ffc6a039a3be4a7b918dd6cb6c",
     "skills/api-design/SKILL.md": "e06d9f5a04e1273675fd7ba64725440d19343b921032e71b93add6c1a679ec7b",
     "skills/code-review/SKILL.md": "a8245cab112e742b8665ebe2237e0f9492f56dd14f5ce846e9bd1faebcaf14ef",
     "skills/code-review/references/compatibility.md": "116660b24faf0f7c8f88d5c28ce4a1535a67c5bb762bcb1791cd256b7018f45a",
@@ -42,5 +42,5 @@
   "generated_by": "scripts/package_plugins.py",
   "plugin": "agentic-engineering",
   "schema_version": 1,
-  "version": "1.0.0"
+  "version": "1.0.1"
 }

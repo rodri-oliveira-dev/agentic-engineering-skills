@@ -1,7 +1,7 @@
 {
   "metadata": {
     "description": "Agentic Engineering Skills plugin marketplace.",
-    "version": "1.0.0"
+    "version": "1.0.1"
   },
   "name": "agentic-engineering-skills",
   "owner": {
@@ -12,7 +12,7 @@
       "description": "Reusable software-engineering workflows for design, review, debugging, delivery, documentation, SQL, and testing.",
       "name": "agentic-engineering",
       "source": "./plugins/agentic-engineering",
-      "version": "1.0.0"
+      "version": "1.0.1"
     }
   ]
 }
