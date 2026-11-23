@@ -18,8 +18,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: supply-chain-@@{ github.workflow }}-@@{ github.ref }}
-  cancel-in-progress: @@{ github.event_name != 'release' }}
+  group: supply-chain-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'release' }}
 
 jobs:
   audit:
@@ -76,19 +76,19 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: supply-chain-evidence-@@{ github.run_id }}-@@{ github.run_attempt }}
-          path: @@{ runner.temp }}/supply-chain/
+          name: supply-chain-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/supply-chain/
           if-no-files-found: error
           retention-days: 30
 
       - name: Enforce audit result
         if: always()
         env:
-          SCA: @@{ steps.sca.outcome }}
-          SBOM: @@{ steps.sbom.outcome }}
-          PACKAGE: @@{ steps.package.outcome }}
-          INVENTORY: @@{ steps.inventory.outcome }}
-          EVIDENCE: @@{ steps.evidence.outcome }}
+          SCA: ${{ steps.sca.outcome }}
+          SBOM: ${{ steps.sbom.outcome }}
+          PACKAGE: ${{ steps.package.outcome }}
+          INVENTORY: ${{ steps.inventory.outcome }}
+          EVIDENCE: ${{ steps.evidence.outcome }}
         run: |
           for result in "$SCA" "$SBOM" "$PACKAGE" "$INVENTORY" "$EVIDENCE"; do
             if [[ "$result" != 'success' ]]; then
@@ -113,7 +113,7 @@ jobs:
       - name: Check out the published release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: @@{ github.event.release.tag_name }}
+          ref: ${{ github.event.release.tag_name }}
           persist-credentials: false
 
       - name: Set up Python
@@ -128,7 +128,7 @@ jobs:
 
       - name: Build deterministic archive and checksum
         env:
-          RELEASE_TAG: @@{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           python scripts/supply_chain_evidence.py package --tag "$RELEASE_TAG" --output "dist/agentic-engineering-${RELEASE_TAG}.zip"
 
