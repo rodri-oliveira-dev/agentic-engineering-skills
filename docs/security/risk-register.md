@@ -12,7 +12,9 @@ This register tracks **open risk conditions and evidence gaps**, not confirmed u
 | SC-006 | Publication requires an approved GitHub Environment and OIDC/write token permissions | Configure required reviewers and main-only deployment policy in repository Settings; privileged publisher is isolated | Open, administrative setup |
 | SC-007 | Existing tag protection matches `v*` but the release uses `1.0.0` | Adjust GitHub tag ruleset to cover the actual naming convention; verify immutability before the next release | Open, administrative blocker |
 | SC-008 | Branch ruleset does not yet require the new supply-chain audit check | After the workflow is merged and has a successful `main` run, add the audit job to required status checks | Open, administrative action |
-| SC-009 | The new controlled release path has not been exercised end to end | Validate Environment approval, OIDC signing, artifact readback and publication on the next approved version | Open, runtime validation |
+| SC-009 | The 1.0.1 publication attempt signed its archive but stopped at draft readback | Fix the Git tag assumption, then recover the attested draft by numeric ID; do not claim public release until the tag and assets are verified | Open, recovery required |
+
+| SC-010 | Draft assets and Git tag may have different availability before publication | Use REST Release ID and authenticated API asset download for draft readback; validate the Git tag only after publication | Open, fix awaiting successful runtime verification |
 
 ## Decision record
 
