@@ -66,6 +66,26 @@ Activation commands are platform features, not repository CLI options:
 
   See the [Claude Code guide](docs/platforms/claude-code.md) before choosing an explicit project or user destination.
 
+The cross-agent `skills` CLI can also discover all ten canonical skills directly from this repository without using the generated plugin package:
+
+```shell
+npx skills add rodri-oliveira-dev/agentic-engineering-skills --list
+```
+
+Use its `--skill <name>` or `--all` option only after reviewing the listed skills and the destination agents.
+
+For agent selection, individual installation, updates, removal, and the three native marketplaces, follow the [distribution and installation guide](docs/distribution.md). Remote marketplace commands apply after the manifests are published on the repository's default branch.
+
+For marketplace distribution, the repository also provides one generated Agent Plugins 1.0 package containing all ten skills. Regenerate and verify it without a package manager:
+
+```shell
+python scripts/package_plugins.py generate
+python scripts/package_plugins.py check
+python scripts/package_plugins.py verify
+```
+
+The generated `plugins/agentic-engineering/skills/` tree is reviewable distribution output; edit only `.agents/skills/`. See [Plugin distribution architecture](docs/distribution-architecture.md) for the marketplace manifests, compatibility decisions, and versioning strategy.
+
 ## Updating
 
 Update this checkout with Git only after preserving or committing local work, then rerun validation. Codex and Copilot use this repository immediately when operating here. For a managed Claude Code installation, rerun the same installer command; it updates unchanged managed files and refuses to overwrite unmanaged or locally modified content. Manual copies must be reviewed and replaced manually.

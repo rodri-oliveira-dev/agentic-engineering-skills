@@ -21,6 +21,23 @@ The repository currently contains these ten skills:
 
 Each directory contains one canonical `SKILL.md`. Some skills also contain relative `references/`; keep the complete skill directory together so those links continue to resolve.
 
+## Install through the plugin marketplace
+
+The Copilot CLI catalog is `.github/plugin/marketplace.json`. It declares the marketplace `agentic-engineering-skills` and one plugin, `agentic-engineering`, whose source is `./plugins/agentic-engineering` relative to the repository root. The package uses the Agent Plugins 1.0 root `plugin.json`; Copilot gives that portable manifest precedence over legacy manifests and discovers all ten generated skills in its fixed `skills/` directory. No Copilot-specific manifest or `copilot-instructions.md` is needed.
+
+After these files are published on the repository's default branch, register the marketplace and install the declared plugin with:
+
+```shell
+copilot plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills
+copilot plugin marketplace browse agentic-engineering-skills
+copilot plugin install agentic-engineering@agentic-engineering-skills
+copilot plugin list
+```
+
+The install identifier is exactly `agentic-engineering@agentic-engineering-skills`: the portion before `@` is the plugin entry name and the portion after it is the marketplace manifest name. The unpublished remote command was not executed. Copilot CLI was not available in the validation environment, so these commands are documented from the current official CLI contract and the repository paths were verified offline, not claimed as a live install result.
+
+The documented maintenance commands are `copilot plugin marketplace update agentic-engineering-skills`, `copilot plugin update agentic-engineering@agentic-engineering-skills`, and `copilot plugin uninstall agentic-engineering@agentic-engineering-skills`. They were not executed because Copilot CLI was unavailable. See [Installing and updating Agentic Engineering Skills](../distribution.md) for the full workflow, including marketplace removal, requirements, and permissions.
+
 ## Project installation
 
 When using this repository itself, no installation step is required: Copilot can discover the checked-in `.agents/skills/` directory.
@@ -102,3 +119,4 @@ A successful result verifies repository structure only. To verify execution on a
 - [GitHub Copilot: Agent skills](https://docs.github.com/en/copilot/concepts/customizations/agent-skills)
 - [GitHub Copilot: Adding agent skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills)
 - [GitHub Copilot CLI: Adding agent skills](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills)
+- [GitHub Copilot CLI: Plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference)

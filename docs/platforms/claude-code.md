@@ -1,6 +1,6 @@
 # Claude Code
 
-The canonical `.agents/skills/` catalog is structurally compatible with Claude Code's Agent Skills format. Claude Code discovers project skills under `.claude/skills/<skill-name>/SKILL.md`, so this repository provides a standard-library Python installer that creates a generated distribution in that location. The canonical skills remain unchanged and authoritative.
+The canonical `.agents/skills/` catalog is structurally compatible with Claude Code's Agent Skills format. Claude Code discovers project skills under `.claude/skills/<skill-name>/SKILL.md`, so this repository provides a standard-library Python installer that creates a generated distribution in that location. For marketplace installation, the repository also provides `.claude-plugin/marketplace.json` and a generated plugin with a Claude compatibility manifest. The canonical skills remain unchanged and authoritative.
 
 This support has two verified boundaries: the existing validator accepts all ten canonical skills, and isolated installer tests verify distribution and update behavior. Claude Code itself was not launched, so discovery, automatic activation, direct invocation, and workflow quality remain behaviorally unverified.
 
@@ -27,6 +27,23 @@ Generated copies are distribution artifacts, not a second source. Make changes u
 - write access to the explicitly selected destination.
 
 The installer itself uses only the Python standard library. Claude Code does not need to be installed to generate or test the distribution.
+
+## Install through the plugin marketplace
+
+The Claude Code catalog is `.claude-plugin/marketplace.json`. It declares the marketplace `agentic-engineering-skills` and one plugin, `agentic-engineering`, whose source is `./plugins/agentic-engineering` relative to the repository root. The generated package contains the ten skills under Claude's default `skills/` location. Its `.claude-plugin/plugin.json` carries only compatibility metadata; it does not declare hooks, commands, agents, MCP servers, authentication, or alternate skill paths.
+
+After these files are published on the repository's default branch, register the marketplace and install the declared plugin with:
+
+```shell
+claude plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills
+claude plugin install agentic-engineering@agentic-engineering-skills
+claude plugin list
+claude plugin details agentic-engineering
+```
+
+The install identifier is exactly `agentic-engineering@agentic-engineering-skills`: Claude Code defines it as the marketplace entry name followed by `@` and the marketplace manifest name. The unpublished remote command was not executed. Claude Code was not available in the validation environment, so these commands are documented from the current official contract and the repository paths were verified offline, not claimed as a live install result. When the CLI is available, the corresponding pre-publication checks are `claude plugin validate .` and `claude plugin validate ./plugins/agentic-engineering`.
+
+The documented maintenance commands are `claude plugin marketplace update agentic-engineering-skills`, `claude plugin update agentic-engineering@agentic-engineering-skills`, and `claude plugin uninstall agentic-engineering@agentic-engineering-skills`. They were not executed because Claude Code was unavailable. See [Installing and updating Agentic Engineering Skills](../distribution.md) for the full workflow, including marketplace removal, requirements, scopes, and permissions.
 
 ## Project installation
 
@@ -116,10 +133,12 @@ Selection values must be direct ASCII kebab-case skill names. Values containing 
 - The selected destination itself must not be a symlink; use the explicit real directory so path checks and ownership remain unambiguous.
 - Claude Code reserves the skill directory names `synced` and `anthropic-skills`; the installer rejects those names. The current catalog uses neither.
 - Personal local skills do not imply availability in Claude Code cloud or Cowork sessions.
-- Claude Code-specific frontmatter, dynamic context injection, plugins, and `CLAUDE.md` files are intentionally not added.
+- Claude Code-specific frontmatter, dynamic context injection, and `CLAUDE.md` files are intentionally not added. The marketplace package adds only the minimal `.claude-plugin/plugin.json` compatibility metadata.
 - The manifest protects against accidental conflicts and edits; it is not a cryptographic trust or authentication mechanism.
 - Do not run concurrent installer processes or use a destination that an untrusted process can mutate during installation; path and hash preflight is not a filesystem transaction or an operating-system security boundary.
 
 ## Official reference
 
 - [Claude Code: Extend Claude with skills](https://code.claude.com/docs/en/skills)
+- [Claude Code: Create a marketplace](https://code.claude.com/docs/en/plugin-marketplaces)
+- [Claude Code: Plugin manifest reference](https://code.claude.com/docs/en/plugins-reference)

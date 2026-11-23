@@ -150,6 +150,28 @@ class DocumentationTests(unittest.TestCase):
                     re.compile(r"^python -m pip install -r requirements\.txt$", re.MULTILINE),
                 )
 
+    def test_distribution_guide_uses_the_generated_marketplace_identity(self) -> None:
+        guide = (REPOSITORY_ROOT / "docs/distribution.md").read_text(encoding="utf-8")
+        plugin_id = "agentic-engineering@agentic-engineering-skills"
+        required_commands = {
+            "npx skills add rodri-oliveira-dev/agentic-engineering-skills --list",
+            "codex plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills",
+            f"codex plugin add {plugin_id}",
+            "copilot plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills",
+            f"copilot plugin install {plugin_id}",
+            "claude plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills",
+            f"claude plugin install {plugin_id}",
+        }
+
+        for command in required_commands:
+            self.assertIn(command, guide)
+        for name in ("README.md", "README.pt-BR.md"):
+            with self.subTest(readme=name):
+                self.assertIn(
+                    "docs/distribution.md",
+                    (REPOSITORY_ROOT / name).read_text(encoding="utf-8"),
+                )
+
     def test_fenced_example_is_not_a_heading_anchor(self) -> None:
         example_only = "[jump](#ghost)\n\n```markdown\n# Ghost\n```\n"
         with_real_heading = example_only + "\n# Ghost\n"

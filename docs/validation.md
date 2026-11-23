@@ -48,7 +48,14 @@ Preview a generated Claude Code distribution without writing it:
 python scripts/install_skills.py --platform claude-code --destination path/to/project/.claude/skills --all --dry-run
 ```
 
-These commands are intentionally shell-neutral. The `Validate skills` GitHub Actions workflow runs the automated test suite and required-catalog validation for pull requests to `main`, pushes to `main`, and manual dispatches. Its minimal compatibility matrix uses Ubuntu with Python 3.11 (the minimum supported runtime) and Windows with Python 3.13. This gives the installer and path-safety code both POSIX and Windows coverage without multiplying every supported Python and operating-system combination. macOS remains a manual compatibility target.
+Check the tracked marketplace package against the canonical skills and then verify its embedded file hashes:
+
+```shell
+python scripts/package_plugins.py check
+python scripts/package_plugins.py verify
+```
+
+These commands are intentionally shell-neutral. The `Validate skills` GitHub Actions workflow runs the automated test suite, required-catalog validation, generated-distribution reconstruction, and embedded package-inventory verification for pull requests to `main`, pushes to `main`, and manual dispatches. Its minimal compatibility matrix uses Ubuntu with Python 3.11 (the minimum supported runtime) and Windows with Python 3.13. This gives the installer and path-safety code both POSIX and Windows coverage without multiplying every supported Python and operating-system combination. macOS remains a manual compatibility target.
 
 The workflow grants the token read-only repository-content access, uses no secrets, and pins official actions to the full commit SHA corresponding to `actions/checkout@v7.0.1` and `actions/setup-python@v7.1.0`. Its checkout does not persist credentials. Because the repository now has implemented skills, CI uses `--require-skills` and fails if the canonical catalog is absent or empty.
 
@@ -82,6 +89,8 @@ The validator automatically checks:
 The automated suite also applies these checks to the real canonical catalog, asserts the preserved ten-skill inventory, requires the stricter ASCII kebab-case project convention without warnings, and verifies that no independent `.github/skills/` tree has been introduced. Together these checks cover the format and project location shared by Codex and Copilot. They do not launch either agent host.
 
 Installer tests use temporary directories to exercise complete and single-skill distributions, nested supporting files, dry runs, repeat installation, managed updates, safe removal, path traversal rejection, malformed and duplicate-key manifests, reserved names, and conflicts with unmanaged or locally modified files. The tests assert that invalid preflight states do not modify the destination. They do not require or launch Claude Code.
+
+Plugin packaging tests generate isolated marketplace roots, compare reproducible outputs, preserve binary and nested skill resources, validate the three marketplace manifests plus the portable and Claude plugin manifests, resolve and confine every repository-relative source, verify the embedded SHA-256 inventory, detect canonical drift and manual derived edits, reject symlinks, and assert that the tracked package contains exactly the ten canonical skills. They do not install or launch any agent client.
 
 Link-shaped text inside fenced or inline Markdown code is treated as an example rather than a reference. HTTP, HTTPS, and email targets are deliberately not fetched. The skill validator does not interpret fragments; a separate documentation regression test verifies local Markdown file targets and heading fragments. External URL availability remains outside the offline suite.
 

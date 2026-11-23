@@ -66,6 +66,26 @@ Comandos de ativação pertencem às plataformas, não são opções de CLI dest
 
   Consulte o [guia do Claude Code](docs/platforms/claude-code.md) antes de escolher um destino explícito de projeto ou usuário.
 
+A CLI multiplataforma `skills` também descobre as dez skills canônicas diretamente deste repositório, sem usar o pacote de plugin gerado:
+
+```shell
+npx skills add rodri-oliveira-dev/agentic-engineering-skills --list
+```
+
+Use `--skill <nome>` ou `--all` somente depois de revisar as skills listadas e os agentes de destino.
+
+Para seleção de agentes, instalação individual, atualização, remoção e os três marketplaces nativos, consulte o [guia de distribuição e instalação](docs/distribution.md). Os comandos remotos de marketplace serão aplicáveis depois que os manifests forem publicados na branch padrão do repositório.
+
+Para distribuição por marketplaces, o repositório também fornece um único pacote Agent Plugins 1.0 gerado com as dez skills. Gere e verifique o pacote sem depender de um gerenciador de pacotes:
+
+```shell
+python scripts/package_plugins.py generate
+python scripts/package_plugins.py check
+python scripts/package_plugins.py verify
+```
+
+A árvore gerada `plugins/agentic-engineering/skills/` é um artefato de distribuição revisável; edite somente `.agents/skills/`. Consulte a [arquitetura de distribuição de plugins](docs/distribution-architecture.md) para os manifests de marketplace, as decisões de compatibilidade e a estratégia de versionamento.
+
 ## Atualização
 
 Atualize este checkout com Git somente depois de preservar ou registrar o trabalho local e execute novamente as validações. Codex e Copilot usam este repositório imediatamente ao operar nele. Para uma instalação gerenciada do Claude Code, repita o mesmo comando do instalador; ele atualiza arquivos gerenciados não alterados e recusa sobrescrever conteúdo não gerenciado ou modificado localmente. Cópias manuais precisam ser revisadas e substituídas manualmente.

@@ -23,6 +23,7 @@ The repository organization is:
 │   └── skills/          # Canonical skill directories
 ├── docs/                # Architecture, platform guides, validation, and release readiness
 ├── scripts/             # Validation, evaluation-record, and distribution tooling
+├── plugins/             # Deterministic marketplace packages generated from canonical skills
 ├── tests/
 │   └── fixtures/        # Representative behavioral scenarios
 ├── .github/
@@ -42,6 +43,7 @@ Directories with no useful content are intentionally not committed. They will be
 Component responsibilities:
 
 - `.agents/skills/` is the only authoritative source for skill instructions and their optional resources.
+- `plugins/agentic-engineering/` is deterministic marketplace output generated from the canonical source, never an independently editable skill tree.
 - `docs/` records repository-wide decisions and conventions, not duplicated skill instructions.
 - `scripts/` contains repository validation tooling. A skill's own executable helpers belong inside that skill's optional `scripts/` directory.
 - `tests/` contains isolated structural and CLI checks without mixing test material into production skills.
@@ -64,7 +66,9 @@ The evidence level for each platform is recorded in the [platform compatibility 
 - **GitHub Copilot:** documents `.agents/skills/` as a supported project location. The canonical catalog has been audited and structurally validated against the shared format, so no adapter or `.github/skills/` copy is needed. Discovery, activation, and workflow behavior across intended Copilot surfaces remain unverified.
 - **Claude Code:** follows the Agent Skills standard and documents project discovery under `.claude/skills/`. The standard-library installer copies complete canonical skill directories into that location as a generated distribution, with a hash manifest that supports safe updates and rejects unmanaged conflicts. No Claude-specific frontmatter is added.
 
-Copilot does not require an adapter because it supports the canonical location. Claude Code's generated distribution is created only on demand and is ignored in this repository; `.agents/skills/` remains authoritative. Generated output must not be edited as source. The installer detects local edits through recorded hashes and stops instead of overwriting them.
+Copilot does not require an adapter for direct repository use because it supports the canonical location. Claude Code's standalone `.claude/skills/` distribution is created only on demand and is ignored in this repository; `.agents/skills/` remains authoritative. Generated output must not be edited as source. The installer detects local edits through recorded hashes and stops instead of overwriting them.
+
+Marketplace distribution adds one generated Agent Plugins 1.0 package for all ten skills. OpenAI and Copilot CLI use its portable root manifest; Claude Code uses a thin compatibility manifest over the same package. Host-specific marketplace catalogs all point to that package. The generation, integrity, versioning, and alternative packaging analysis is recorded in [Plugin distribution architecture](distribution-architecture.md).
 
 Vendor-specific metadata, invocation controls, dynamic context injection, UI configuration, or tool syntax must remain in optional adapters or overlays. They must not become requirements of the shared skill.
 
