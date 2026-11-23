@@ -72,6 +72,7 @@ class ReleaseAutomationTests(unittest.TestCase):
                 destination = root / dirname
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copytree(source, destination)
+            shutil.copy2(repository / "LICENSE", root / "LICENSE")
             (root / "scripts").mkdir()
             shutil.copy2(
                 repository / "scripts/package_plugins.py",
