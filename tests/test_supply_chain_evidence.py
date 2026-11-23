@@ -57,35 +57,71 @@ class SupplyChainEvidenceTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "Unpinned"):
                     evidence.action_inventory()
 
-    def test_release_publication_has_isolated_token_permissions(self) -> None:
-        workflow_file = evidence.ROOT / ".github/workflows/security-audit.yml"
-        workflow = yaml.safe_load(workflow_file.read_text(encoding="utf-8"))
+    def test_release_workflow_is_manually_gated_and_uses_read_only_build(self) -> None:
+        audit_file = evidence.ROOT / ".github/workflows/security-audit.yml"
+        release_file = evidence.ROOT / ".github/workflows/publish-release.yml"
+        audit = yaml.safe_load(audit_file.read_text(encoding="utf-8"))
+        workflow = yaml.safe_load(release_file.read_text(encoding="utf-8"))
+        events = workflow.get("on", workflow.get(True))
+        self.assertIn("workflow_dispatch", events)
+        self.assertNotIn("release", events)
+        self.assertIn("workflow_call:", audit_file.read_text(encoding="utf-8"))
+        self.assertEqual({"contents": "read"}, audit["permissions"])
         self.assertEqual({"contents": "read"}, workflow["permissions"])
+
         jobs = workflow["jobs"]
-        audit = jobs["audit"]
-        builder = jobs["release-package"]
-        publisher = jobs["release-provenance"]
-        self.assertEqual({"contents": "read"}, builder["permissions"])
-        self.assertEqual("audit", builder["needs"])
-        self.assertEqual("release-package", publisher["needs"])
+        self.assertEqual({"contents": "read"}, jobs["preflight"]["permissions"])
+        self.assertEqual({"contents": "read"}, jobs["audit"]["permissions"])
+        self.assertEqual({"contents": "read"}, jobs["release-package"]["permissions"])
+        self.assertEqual("./.github/workflows/security-audit.yml", jobs["audit"]["uses"])
+        self.assertEqual("audit", jobs["release-package"]["needs"])
+        self.assertEqual("release-package", jobs["publish"]["needs"])
+        self.assertEqual({"name": "release"}, jobs["publish"]["environment"])
         self.assertEqual(
             {"contents": "write", "id-token": "write", "attestations": "write"},
-            publisher["permissions"],
-        )
-        self.assertTrue(
-            any("actions/checkout@" in step.get("uses", "") for step in builder["steps"])
+            jobs["publish"]["permissions"],
         )
         self.assertFalse(
-            any("actions/checkout@" in step.get("uses", "") for step in publisher["steps"])
+            any("actions/checkout@" in step.get("uses", "") for step in jobs["publish"]["steps"])
         )
         self.assertFalse(
-            any("python " in step.get("run", "") for step in publisher["steps"])
+            any("python " in step.get("run", "") for step in jobs["publish"]["steps"])
         )
         self.assertTrue(
-            any("download-artifact@" in step.get("uses", "") for step in publisher["steps"])
+            any("download-artifact@" in step.get("uses", "") for step in jobs["publish"]["steps"])
         )
-        self.assertEqual("${{ github.sha }}", audit["steps"][0]["with"]["ref"])
-        self.assertEqual("${{ github.sha }}", builder["steps"][0]["with"]["ref"])
+        self.assertEqual(
+            "${{ github.sha }}",
+            jobs["release-package"]["steps"][0]["with"]["ref"],
+        )
+        names = [step["name"] for step in jobs["publish"]["steps"]]
+        self.assertLess(
+            names.index("Verify cryptographic provenance before release creation"),
+            names.index("Create draft release with verified assets"),
+        )
+        self.assertLess(
+            names.index("Download draft assets and compare published bytes"),
+            names.index("Publish after successful artifact readback"),
+        )
+
+    def test_prepare_workflow_dispatches_required_checks(self) -> None:
+        workflow_file = evidence.ROOT / ".github/workflows/prepare-release.yml"
+        workflow = yaml.safe_load(workflow_file.read_text(encoding="utf-8"))
+        events = workflow.get("on", workflow.get(True))
+        self.assertEqual(["notes", "version"], sorted(events["workflow_dispatch"]["inputs"]))
+        self.assertEqual({"contents": "read"}, workflow["permissions"])
+        job = workflow["jobs"]["prepare"]
+        self.assertEqual(
+            {"contents": "write", "pull-requests": "write", "actions": "write"},
+            job["permissions"],
+        )
+        script = "\n".join(step.get("run", "") for step in job["steps"])
+        self.assertIn("gh pr create", script)
+        self.assertIn("gh workflow run validate-skills.yml", script)
+        self.assertIn("gh workflow run security-audit.yml", script)
+        for step in job["steps"]:
+            self.assertNotIn("${{ inputs.notes }}", step.get("run", ""))
+            self.assertNotIn("${{ inputs.version }}", step.get("run", ""))
 
     def test_release_archive_is_reproducible_and_checksum_is_correct(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
