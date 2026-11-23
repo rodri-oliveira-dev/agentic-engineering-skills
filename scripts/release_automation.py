@@ -74,13 +74,8 @@ def prepare(version: str, notes: str, root: Path = ROOT) -> None:
         raise ValueError("Cannot safely update version assignment")
     generator.write_text(revised, encoding="utf-8")
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(
-        f"# Release {version}\n\n"
-        "Approved release notes for the proposed version. This document alone "
-        "does not attest that the version was published.\n\n"
-        f"{clean_notes}\n",
-        encoding="utf-8",
-    )
+    # The PR contains proposed content only; publication is a separate approved workflow.
+    destination.write_text(f"# Release {version}\n\n{clean_notes}\n", encoding="utf-8")
     subprocess.run(
         [sys.executable, str(generator), "generate"],
         check=True,
