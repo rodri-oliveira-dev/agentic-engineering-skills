@@ -12,14 +12,23 @@ Requirements:
 - Python 3.11 or newer;
 - a virtual environment is recommended.
 
-From the repository root:
+From the repository root, create the environment and use its interpreter explicitly. Activation is optional.
+
+Linux and macOS:
 
 ```shell
 python -m venv .venv
-python -m pip install -r requirements.txt
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
-Activate the virtual environment with the command appropriate for your operating system. The project intentionally keeps its dependency set small and pinned.
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+The project intentionally keeps its dependency set small and pinned. Python is required for repository development and validation, not for every end-user installation route.
 
 ## Create a skill
 
@@ -46,17 +55,21 @@ The complete project contract is normative; this example is not a substitute for
 
 ## Run validation
 
-Run the same commands used by continuous integration:
+With the virtual environment activated, run the same commands used by continuous integration. If it is not activated, replace `python` with `.venv/bin/python` on Linux/macOS or `.venv\Scripts\python.exe` on Windows PowerShell:
 
 ```shell
 python -m unittest discover -s tests -v
 python scripts/validate_skills.py --require-skills
 python scripts/evaluate_scenarios.py check
+python scripts/package_plugins.py check
+python scripts/package_plugins.py verify
 ```
 
 The validator checks structure, frontmatter, names, duplicates, and local reference safety without executing skill scripts. Errors fail validation; project-convention warnings do not. The scenario checker verifies fixture coverage and any supplied evaluation-record schema; it does not run an agent or turn fixtures into behavioral results. Structural success does not prove behavioral quality.
 
-Changes to platform distribution must keep `.agents/skills/` as the only canonical source, update the [compatibility matrix](docs/platforms/compatibility-matrix.md), and add deterministic tests for generated content and safety boundaries. Do not commit generated `.claude/skills/` output or create an independently editable `.github/skills/` tree.
+`.agents/skills/` is the only canonical source for skill content. `plugins/agentic-engineering/` and the three marketplace manifests are generated distribution artifacts. When canonical skills or package metadata change, run `python scripts/package_plugins.py generate`, review the generated diff, and then run both package checks above. Documentation-only changes that do not affect package content do not require regeneration. Do not commit generated `.claude/skills/` output or create an independently editable `.github/skills/` tree.
+
+Changes to platform distribution must update the [compatibility matrix](docs/platforms/compatibility-matrix.md), preserve deterministic generation and safety boundaries, and include evidence at the level claimed. Documentation must distinguish structural checks, client installation, and live behavioral execution.
 
 ## Write tests
 
@@ -82,5 +95,7 @@ Use the feature request form to explain the problem before the proposed solution
 - Run all validation commands locally and report their observed results, including skips.
 - Complete the pull request checklist and describe known limitations.
 - Do not claim compatibility that has not been tested.
+- Identify public-contract, compatibility, dependency, packaging, or canonical-layout effects. Apply Semantic Versioning implications according to [Architecture](docs/architecture.md#versioning); documentation-only corrections normally do not change the package version.
+- Expect review of scope, canonical-source ownership, generated artifacts, test evidence, documentation accuracy, security boundaries, compatibility claims, and versioning impact.
 
 A contribution is ready for acceptance when its scope is clear, required checks pass, Agent Skills conformance and project conventions are preserved, safety implications are addressed, documentation matches behavior, and review comments are resolved. Changes to the shared contract or compatibility promises require the additional review described in [Technical governance](docs/architecture.md#technical-governance).

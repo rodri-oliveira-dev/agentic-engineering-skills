@@ -20,15 +20,20 @@ The repository organization is:
 ```text
 .
 ├── .agents/
-│   └── skills/          # Canonical skill directories
-├── docs/                # Architecture, platform guides, validation, and release readiness
-├── scripts/             # Validation, evaluation-record, and distribution tooling
-├── plugins/             # Deterministic marketplace packages generated from canonical skills
+│   ├── skills/                    # Canonical skill directories
+│   └── plugins/marketplace.json  # OpenAI Codex marketplace
+├── .claude-plugin/
+│   └── marketplace.json          # Claude Code marketplace
+├── docs/                         # Architecture, platform, validation, and release records
+├── scripts/                      # Validation, evaluation-record, and distribution tooling
+├── plugins/
+│   └── agentic-engineering/      # Generated installable package
 ├── tests/
-│   └── fixtures/        # Representative behavioral scenarios
+│   └── fixtures/                   # Representative behavioral scenarios
 ├── .github/
-│   ├── ISSUE_TEMPLATE/  # Focused issue forms
-│   └── workflows/       # Continuous integration
+│   ├── ISSUE_TEMPLATE/             # Focused issue forms
+│   ├── plugin/marketplace.json     # GitHub Copilot CLI marketplace
+│   └── workflows/                  # Continuous integration
 ├── CONTRIBUTING.md      # Contribution workflow and acceptance criteria
 ├── SECURITY.md          # Private reporting and safe-research policy
 ├── THIRD_PARTY_NOTICES.md
@@ -44,6 +49,7 @@ Component responsibilities:
 
 - `.agents/skills/` is the only authoritative source for skill instructions and their optional resources.
 - `plugins/agentic-engineering/` is deterministic marketplace output generated from the canonical source, never an independently editable skill tree.
+- `.agents/plugins/marketplace.json`, `.github/plugin/marketplace.json`, and `.claude-plugin/marketplace.json` are generated host catalogs that resolve the same package through host-specific metadata shapes.
 - `docs/` records repository-wide decisions and conventions, not duplicated skill instructions.
 - `scripts/` contains repository validation tooling. A skill's own executable helpers belong inside that skill's optional `scripts/` directory.
 - `tests/` contains isolated structural and CLI checks without mixing test material into production skills.
@@ -74,13 +80,13 @@ Vendor-specific metadata, invocation controls, dynamic context injection, UI con
 
 ## Versioning
 
-Published project releases will use Semantic Versioning:
+Published project releases use Semantic Versioning. Version `1.0.0` is the first stable release:
 
 - patch releases for compatible corrections and clarifications;
 - minor releases for new skills or backward-compatible capabilities;
 - major releases for breaking changes to the authoring contract, layout, or expected behavior.
 
-Until the first stable release, the contract may evolve, with changes recorded in documentation and release notes. Skills may carry version metadata later if a demonstrated distribution or migration need justifies it; no project-specific metadata is required now.
+The project release version is represented by its Git tag and GitHub Release. Marketplace entries and plugin manifests repeat that release version for client selection; they are generated from one package-version constant and must remain aligned for a release. Embedded per-file SHA-256 values are content-integrity data, not versions, Git tags, release signatures, or archive checksums. Skills may carry separate version metadata later only if a demonstrated distribution or migration need justifies it; no project-specific skill version is required now.
 
 ## Future testing and validation
 
@@ -152,7 +158,7 @@ Specification changes should be traced to an official source. Subjective authori
 
 The canonical format remains vendor-neutral, with Codex first, Copilot second, and Claude Code third in implementation priority. Compatibility is claimed per tested surface rather than inferred from shared syntax. Platform adapters must reuse `.agents/skills/` and isolate proprietary behavior.
 
-Semantic Versioning governs published releases. Compatible corrections are patches, backward-compatible skills or capabilities are minor releases, and changes that invalidate supported skill content, alter the canonical contract, or remove supported behavior require a major release. Before version 1.0, breaking changes are still documented explicitly and should include migration guidance.
+Semantic Versioning governs published releases. Compatible corrections are patches, backward-compatible skills or capabilities are minor releases, and changes that invalidate supported skill content, alter the canonical contract, or remove supported behavior require a major release. The published `1.0.0` tag remains immutable; subsequent breaking changes require a new major release and migration guidance.
 
 A potentially breaking change requires an issue or clearly identified pull request discussion, compatibility impact analysis, updated tests, and maintainer review. Releases and compatibility statements are never automated by validation CI.
 

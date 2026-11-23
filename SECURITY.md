@@ -2,13 +2,21 @@
 
 ## Supported versions
 
-The project has not published a stable release yet. Security fixes currently target the default branch. This policy will be updated with a supported-version table when the first release is published; do not infer support for an unreleased version from the readiness document.
+| Version or line | Security-fix status |
+| --- | --- |
+| Default branch (`main`) | Receives current security corrections |
+| Latest stable release (`1.0.0`) | Supported; a fix may require users to update to a newer stable release when one is published |
+| Versions older than `1.0.0` | Not supported |
+
+This small open source project does not promise response times, guaranteed backports, long-term support, or continued support for a fixed release. Maintainers assess reports against the current default branch and latest stable release, then document any affected versions and available remediation. Publication of a fix depends on validation and maintainer capacity.
 
 ## Report a vulnerability
 
 Do not disclose a vulnerability, exploit details, credentials, or sensitive repository data in a public issue.
 
-Use GitHub's private vulnerability reporting option in the repository **Security** tab when it is available. If that option is unavailable, contact the maintainer through a private channel listed on the maintainer's GitHub profile and include only enough information to arrange a secure exchange. No response-time commitment is made before a private reporting channel and maintainer capacity have been verified.
+Use [GitHub private vulnerability reporting](https://github.com/rodri-oliveira-dev/agentic-engineering-skills/security/advisories/new). If that option is unavailable, contact the maintainer through a private channel listed on the maintainer's GitHub profile and include only enough information to arrange a secure exchange. No response-time commitment is made.
+
+Privately reported vulnerabilities are reviewed for reproducibility, impact, affected versions, upstream ownership, and a safe remediation. The maintainer may request more evidence, coordinate disclosure privately, or refer an upstream issue to the responsible vendor. A private report does not guarantee acceptance, a particular publication date, or a backport.
 
 Include:
 

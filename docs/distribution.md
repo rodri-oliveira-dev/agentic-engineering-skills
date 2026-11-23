@@ -19,7 +19,7 @@ List this repository's skills without installing anything:
 npx skills add rodri-oliveira-dev/agentic-engineering-skills --list
 ```
 
-On 2026-11-23, the equivalent local-checkout command `npx --yes skills@latest add . --list` ran with Node.js 24.22.3 and npm/npx 11.19.1, found exactly ten skills, and exited `0`. It did not install a skill. The remote `owner/repo` form remains unverified until the marketplace changes are published.
+On 2026-11-23, `skills` CLI `1.9.0` listed exactly ten skills from both a local checkout and the public `owner/repo` source with Node.js 24.22.3 and npm/npx 11.19.1. Both commands exited `0` and did not install a skill. A mutating installation with this CLI remains unverified.
 
 Install one skill and choose its target agents interactively:
 
@@ -27,40 +27,42 @@ Install one skill and choose its target agents interactively:
 npx skills add rodri-oliveira-dev/agentic-engineering-skills --skill code-review
 ```
 
-Select agents explicitly when you need a reproducible target. Repeat `--agent` for multiple agents:
+Select agents explicitly when you need a reproducible target. The current CLI accepts multiple names after `--agent`:
 
 ```shell
-npx skills add rodri-oliveira-dev/agentic-engineering-skills --skill testing --agent codex --agent claude-code
+npx skills add rodri-oliveira-dev/agentic-engineering-skills --skill testing --agent codex claude-code
 ```
 
-Install all ten skills only after reviewing the source and destinations:
+Install all ten skills for every supported agent without confirmation:
 
 ```shell
 npx skills add rodri-oliveira-dev/agentic-engineering-skills --all
 ```
 
+`--all` is shorthand for `--skill '*' --agent '*' -y`. Use explicit `--skill` and `--agent` values when you need a narrower selection. Since the non-interactive operation can replace same-named skill directories, preserve uncommitted work and move or back up conflicting directories before running it.
+
 Project scope is the default; `--global` installs for the current user. The CLI may offer symlinks or copies depending on the target. Use `--copy` when the environment cannot create or preserve symlinks.
 
-Check for updates and then update all project skills or one named skill:
+Update all project skills or one named skill:
 
 ```shell
-npx skills check
 npx skills update --project
 npx skills update code-review
 ```
 
-Remove one installed skill or everything tracked from this source:
+Remove one installed skill, choose interactively, or remove all installed skills:
 
 ```shell
 npx skills remove code-review
-npx skills remove rodri-oliveira-dev/agentic-engineering-skills
+npx skills remove
+npx skills remove --all
 ```
 
 The `skills` CLI records installations in `skills-lock.json`; review local modifications before updating or removing tracked content. Private repository sources may require existing Git, GitHub CLI, SSH, `GH_TOKEN`, or `GITHUB_TOKEN` authentication. This public repository does not require repository credentials for ordinary anonymous access.
 
 ## Marketplace installation
 
-Marketplace registration writes to the selected agent's user configuration and requires network access to GitHub for the `owner/repo` form. The commands below become remotely usable only after the marketplace files are published on the repository's default branch. This repository has no plugin authentication, MCP server, hook, or executable installation command.
+Marketplace registration writes to the selected agent's user configuration and requires network access to GitHub for the `owner/repo` form. All three manifests are published on the repository's default branch. Publication establishes availability, not successful installation or behavior on every client. This repository has no plugin authentication, MCP server, hook, or executable installation command.
 
 ### OpenAI Codex
 
@@ -74,7 +76,15 @@ codex plugin list --marketplace agentic-engineering-skills --available --json
 codex plugin add agentic-engineering@agentic-engineering-skills
 ```
 
-The current tested CLI is `codex-cli 0.171.0-alpha.13`; the official plugin documentation does not state a minimum Codex CLI version for repository marketplaces. Use `codex plugin --help` to confirm support. Start a new session after installation and enter `/plugins` to inspect the plugin.
+The tested CLI is `codex-cli 0.171.0-alpha.13`; it registered this public repository, listed version `1.0.0`, and installed the plugin into an isolated temporary `CODEX_HOME` on 2026-11-23. The official plugin documentation does not state a minimum Codex CLI version for repository marketplaces. Use `codex plugin --help` to confirm support. The interactive `/plugins` view and live skill activation were not tested.
+
+For a reproducible registration fixed to the published tag, use this command instead of the default-branch registration above:
+
+```shell
+codex plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills --ref 1.0.0
+```
+
+The same isolated validation registered tag `1.0.0`, listed the expected plugin version, and installed it successfully. Pinning fixes the marketplace snapshot; it does not change the plugin identifier or prove behavioral compatibility.
 
 Refresh the Git marketplace snapshot:
 
@@ -159,10 +169,11 @@ Claude installs at user scope by default. Pass `--scope project` or `--scope loc
 | Path | Requirements | Permissions and limitations |
 | --- | --- | --- |
 | Universal `npx skills` | Maintained Node.js distribution with `npx`; Git/network access for a remote source | Writes skill directories and `skills-lock.json`; global scope needs write access to the user's agent directories; symlink support varies by operating system |
-| Codex marketplace | Codex CLI with `plugin marketplace`; Git/network access | Writes below the isolated or user `CODEX_HOME`; remote registration is not verified before publication; IDE extension plugin support is not documented |
+| Codex marketplace | Codex CLI with `plugin marketplace`; Git/network access | Writes below the isolated or user `CODEX_HOME`; public registration and isolated installation are validated only with the named CLI; IDE extension and live-agent behavior are not verified |
 | Copilot marketplace | Copilot CLI with `plugin marketplace`; Git/network access | Writes Copilot user configuration/cache; CLI was unavailable in the project validation environment; other Copilot surfaces have different support |
 | Claude marketplace | Claude Code with `plugin marketplace`; Git/network access | Writes Claude settings and plugin cache at the selected scope; CLI and native `plugin validate` were unavailable in the project validation environment |
-| Package generation | Python 3.11 or newer | Uses only the Python standard library; run from a trusted checkout; edit `.agents/skills/`, never the generated package |
+| Standalone Claude installer | Python 3.11 or newer | Uses only the Python standard library; writes the explicit destination and does not launch Claude Code |
+| Repository development and package validation | Python 3.11 or newer; PyYAML from `requirements.txt` for skill validation | Run from a trusted checkout; edit `.agents/skills/`, never the generated package |
 
 The marketplace plugin always installs all ten skills. Use the universal Agent Skills route for a subset. Structural validation proves the manifests, paths, hashes, and file equality; it does not prove automatic activation or model behavior on any agent.
 
@@ -177,7 +188,7 @@ python scripts/package_plugins.py check
 python scripts/package_plugins.py verify
 ```
 
-When their CLIs are available, validate marketplaces in isolated configuration directories before publication. Never use a successful offline validator as a substitute for a native CLI result.
+When their CLIs are available, validate marketplaces in isolated configuration directories. Never use a successful offline validator as a substitute for a native CLI result. The current `skills` CLI help does not document a stable Git tag or revision syntax, so this guide does not present a version-pinned universal-CLI command. Codex marketplace registration separately supports and has been tested with `--ref` as shown above.
 
 ## References
 

@@ -32,7 +32,7 @@ The installer itself uses only the Python standard library. Claude Code does not
 
 The Claude Code catalog is `.claude-plugin/marketplace.json`. It declares the marketplace `agentic-engineering-skills` and one plugin, `agentic-engineering`, whose source is `./plugins/agentic-engineering` relative to the repository root. The generated package contains the ten skills under Claude's default `skills/` location. Its `.claude-plugin/plugin.json` carries only compatibility metadata; it does not declare hooks, commands, agents, MCP servers, authentication, or alternate skill paths.
 
-After these files are published on the repository's default branch, register the marketplace and install the declared plugin with:
+These files are published on the repository's default branch. The documented registration and installation commands are:
 
 ```shell
 claude plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills
@@ -41,7 +41,7 @@ claude plugin list
 claude plugin details agentic-engineering
 ```
 
-The install identifier is exactly `agentic-engineering@agentic-engineering-skills`: Claude Code defines it as the marketplace entry name followed by `@` and the marketplace manifest name. The unpublished remote command was not executed. Claude Code was not available in the validation environment, so these commands are documented from the current official contract and the repository paths were verified offline, not claimed as a live install result. When the CLI is available, the corresponding pre-publication checks are `claude plugin validate .` and `claude plugin validate ./plugins/agentic-engineering`.
+The install identifier is exactly `agentic-engineering@agentic-engineering-skills`: Claude Code defines it as the marketplace entry name followed by `@` and the marketplace manifest name. Claude Code was not available in the validation environment, so the published remote commands are documented from the current official contract and the repository paths were verified offline, not claimed as a live install result. When the CLI is available, the corresponding native checks are `claude plugin validate .` and `claude plugin validate ./plugins/agentic-engineering`.
 
 The documented maintenance commands are `claude plugin marketplace update agentic-engineering-skills`, `claude plugin update agentic-engineering@agentic-engineering-skills`, and `claude plugin uninstall agentic-engineering@agentic-engineering-skills`. They were not executed because Claude Code was unavailable. See [Installing and updating Agentic Engineering Skills](../distribution.md) for the full workflow, including marketplace removal, requirements, scopes, and permissions.
 

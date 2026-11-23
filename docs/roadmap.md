@@ -1,6 +1,6 @@
 # Roadmap
 
-This roadmap communicates intended work, not delivery commitments. All ten planned skills are implemented; this status records authored and structurally validated content, not completed behavioral or cross-platform evaluation. Platform compatibility will be recorded only after evidence-based testing, and the catalog is not yet a published 1.0 release.
+This roadmap communicates intended work, not delivery commitments. All ten planned skills are implemented and version `1.0.0` is published. Those facts do not imply completed behavioral, security, dependency, or cross-platform evaluation; compatibility is recorded only at the level supported by evidence.
 
 ## Planned skills
 
@@ -35,7 +35,7 @@ The responsibility statements are initial boundaries and will be refined during 
 - Supporting references remain scoped and dependency-free.
 - Codex discovery uses the canonical repository location; behavioral evaluation remains part of the next phase.
 
-### 3. Testing and refinement
+### 3. Testing and refinement — ongoing
 
 - **Current phase:** deterministic structural checks and representative fixtures exist for all ten skills; controlled behavioral execution remains pending.
 - Expand static conformance checks and representative scenarios as new skills expose concrete needs.
@@ -43,7 +43,7 @@ The responsibility statements are initial boundaries and will be refined during 
 - Refine instructions using observed results rather than assumed behavior.
 - Keep CI aligned with useful local checks and deterministic structural validation.
 
-### 4. Copilot and Claude compatibility
+### 4. Copilot and Claude compatibility — structurally complete, runtime work ongoing
 
 - **Copilot structural compatibility complete:** the canonical directory is officially supported, the catalog has been audited against the shared structure, and regression tests prevent a duplicated `.github/skills/` tree.
 - Test canonical discovery, activation, and behavior across intended Copilot surfaces.
@@ -52,13 +52,13 @@ The responsibility statements are initial boundaries and will be refined during 
 - Isolate platform-specific extensions and document any behavioral differences.
 - **Compatibility matrix published:** record official support, structural evidence, runtime checks, and limitations separately; update it as controlled platform testing becomes available.
 
-### 5. Version 1.0 publication
+### 5. Version 1.0 publication — published with outstanding readiness criteria
 
-- Confirm all planned skills meet the stable authoring contract.
-- Complete security, licensing, documentation, and cross-platform reviews.
-- Document installation or distribution paths that have been tested.
-- Publish release notes and a stable compatibility statement.
+- **Completed implementation:** all planned skills and marketplace manifests were included in tag `1.0.0`; the GitHub Release and generated source archives were published on 2026-11-23.
+- **Completed deterministic evidence:** exact-commit CI passed the repository's unit, structural, scenario-consistency, and package-integrity checks.
+- **Partially complete installation evidence:** public Codex marketplace registration and isolated installation were validated after publication; Copilot CLI, Claude Code, and mutating universal-CLI installation remain unverified.
+- **Outstanding quality work:** live-agent behavioral evaluation, complete dependency vulnerability/provenance assessment, remaining client workflows, and any release approval record remain unresolved.
 
-The evidence and unresolved publication conditions are tracked in [Version 1.0.0 readiness](releases/v1.0.0-readiness.md). A completed roadmap item does not by itself authorize a release.
+The prerelease decision and its original evidence remain in [Version 1.0.0 readiness](releases/v1.0.0-readiness.md). The factual release state and unresolved criteria are recorded separately in the [Version 1.0.0 publication record](releases/1.0.0-publication.md). Publication does not retroactively prove compliance with the original criteria.
 
 Phases may overlap for feedback, but compatibility and completion claims must not precede their validation evidence.
