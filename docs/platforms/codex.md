@@ -31,7 +31,7 @@ To update a copied installation, replace the complete selected skill directory f
 
 The repository marketplace at `.agents/plugins/marketplace.json` exposes one plugin named `agentic-engineering`. Its portable Agent Plugins 1.0 manifest is at `plugins/agentic-engineering/plugin.json`, and the package's fixed `skills/` directory is generated from all ten canonical skills.
 
-After a revision containing these files is published, the intended registration command is:
+The marketplace files are published on `main`. Register the public repository with:
 
 ```shell
 codex plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills
@@ -43,7 +43,7 @@ Then open `/plugins` in Codex CLI and select the `agentic-engineering-skills` ma
 codex plugin list --marketplace agentic-engineering-skills --available
 ```
 
-The plugin identifier is `agentic-engineering@agentic-engineering-skills`. The remote `owner/repo` registration cannot be validated until the revision is published. Do not treat the local validation below as proof that the unpublished remote command already works.
+The plugin identifier is `agentic-engineering@agentic-engineering-skills`. On 2026-11-23, remote `owner/repo` registration, listing, and isolated installation succeeded with Codex CLI `0.171.0-alpha.13`. A separate isolated run fixed registration to the published revision with `codex plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills --ref 1.0.0` and installed the same plugin version successfully. This installation evidence does not establish live agent discovery, activation, or behavioral quality.
 
 For the complete installation, refresh, removal, requirements, and permissions workflow, see [Installing and updating Agentic Engineering Skills](../distribution.md). In `codex-cli 0.171.0-alpha.13`, refresh a Git marketplace with `codex plugin marketplace upgrade agentic-engineering-skills`; this version has no `codex plugin update` subcommand, so update through `/plugins` when offered or remove and add the plugin again after the refresh.
 
@@ -61,7 +61,9 @@ codex plugin list --marketplace agentic-engineering-skills --json
 python scripts/package_plugins.py verify --package <temporary-installed-path>
 ```
 
-Observed results: the marketplace resolved to this repository root; the plugin appeared as available at `plugins/agentic-engineering`; installation copied it below the temporary `CODEX_HOME`; the installed plugin was enabled; exactly ten skill directories were present; and the installed package passed its SHA-256 inventory verification. A second check copied only `.agents/plugins/marketplace.json` and `plugins/agentic-engineering/` to a different temporary marketplace root, then repeated `marketplace add`, `plugin list`, and `plugin add`; Codex resolved the source below the relocated root and again installed ten skills. The temporary directories were removed after the checks. The interactive `/plugins` browser, the unpublished GitHub source, and behavioral skill activation were not exercised.
+Observed results: the marketplace resolved to this repository root; the plugin appeared as available at `plugins/agentic-engineering`; installation copied it below the temporary `CODEX_HOME`; the installed plugin was enabled; exactly ten skill directories were present; and the installed package passed its SHA-256 inventory verification. A second check copied only `.agents/plugins/marketplace.json` and `plugins/agentic-engineering/` to a different temporary marketplace root, then repeated `marketplace add`, `plugin list`, and `plugin add`; Codex resolved the source below the relocated root and again installed ten skills.
+
+After publication, a new isolated run registered `rodri-oliveira-dev/agentic-engineering-skills`, listed plugin version `1.0.0`, and installed it below the temporary `CODEX_HOME`. The temporary directories were removed after the checks. The interactive `/plugins` browser and behavioral skill activation were not exercised in either run.
 
 ## Validation boundary
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 import sys
 import unittest
@@ -26,6 +27,15 @@ CANONICAL_SKILLS = {
 }
 
 
+def current_plugin_version() -> str:
+    marketplace = json.loads(
+        (REPOSITORY_ROOT / ".agents" / "plugins" / "marketplace.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    return marketplace["plugins"][0]["version"]
+
+
 def documentation_files() -> list[Path]:
     root_files = [
         REPOSITORY_ROOT / name
@@ -37,7 +47,8 @@ def documentation_files() -> list[Path]:
             "THIRD_PARTY_NOTICES.md",
         )
     ]
-    return root_files + sorted((REPOSITORY_ROOT / "docs").rglob("*.md"))
+    github_files = [REPOSITORY_ROOT / ".github" / "PULL_REQUEST_TEMPLATE.md"]
+    return root_files + github_files + sorted((REPOSITORY_ROOT / "docs").rglob("*.md"))
 
 
 def without_fenced_code(markdown: str) -> str:
@@ -119,7 +130,10 @@ class DocumentationTests(unittest.TestCase):
                 self.assertEqual(references, linked)
 
     def test_english_and_portuguese_readmes_list_the_canonical_catalog(self) -> None:
-        pattern = re.compile(r"^- `([a-z0-9-]+)`: ", re.MULTILINE)
+        pattern = re.compile(
+            r"^- \[`([a-z0-9-]+)`\]\(\.agents/skills/\1/SKILL\.md\): ",
+            re.MULTILINE,
+        )
         for name in ("README.md", "README.pt-BR.md"):
             with self.subTest(readme=name):
                 listed = set(pattern.findall((REPOSITORY_ROOT / name).read_text(encoding="utf-8")))
@@ -127,17 +141,17 @@ class DocumentationTests(unittest.TestCase):
 
     def test_readme_installer_examples_use_supported_options(self) -> None:
         required = {
-            "--platform claude-code",
-            "--destination .claude/skills",
-            "--all",
-            "--dry-run",
+            "npx skills add rodri-oliveira-dev/agentic-engineering-skills --list",
+            "npx skills add rodri-oliveira-dev/agentic-engineering-skills --skill code-review",
+            "npx skills add rodri-oliveira-dev/agentic-engineering-skills --all",
+            "docs/distribution.md",
         }
         for name in ("README.md", "README.pt-BR.md"):
             with self.subTest(readme=name):
                 content = (REPOSITORY_ROOT / name).read_text(encoding="utf-8")
                 for option in required:
                     self.assertIn(option, content)
-                self.assertNotIn("--scope", content)
+                self.assertNotIn("npx skills check", content)
 
     def test_readme_setup_uses_the_created_virtual_environment(self) -> None:
         for name in ("README.md", "README.pt-BR.md"):
@@ -153,9 +167,11 @@ class DocumentationTests(unittest.TestCase):
     def test_distribution_guide_uses_the_generated_marketplace_identity(self) -> None:
         guide = (REPOSITORY_ROOT / "docs/distribution.md").read_text(encoding="utf-8")
         plugin_id = "agentic-engineering@agentic-engineering-skills"
+        version = current_plugin_version()
         required_commands = {
             "npx skills add rodri-oliveira-dev/agentic-engineering-skills --list",
             "codex plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills",
+            f"codex plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills --ref {version}",
             f"codex plugin add {plugin_id}",
             "copilot plugin marketplace add rodri-oliveira-dev/agentic-engineering-skills",
             f"copilot plugin install {plugin_id}",
@@ -171,6 +187,61 @@ class DocumentationTests(unittest.TestCase):
                     "docs/distribution.md",
                     (REPOSITORY_ROOT / name).read_text(encoding="utf-8"),
                 )
+
+    def test_readmes_share_mechanical_installation_and_release_contracts(self) -> None:
+        command_pattern = re.compile(r"^npx skills add .+$", re.MULTILINE)
+        contents = {
+            name: (REPOSITORY_ROOT / name).read_text(encoding="utf-8")
+            for name in ("README.md", "README.pt-BR.md")
+        }
+        commands = {name: set(command_pattern.findall(content)) for name, content in contents.items()}
+        self.assertEqual(commands["README.md"], commands["README.pt-BR.md"])
+        version = current_plugin_version()
+        for content in contents.values():
+            self.assertIn(f"releases/tag/{version}", content)
+            self.assertIn(f"docs/releases/{version}-publication.md", content)
+
+    def test_release_records_cross_link_without_rewriting_history(self) -> None:
+        release_directory = REPOSITORY_ROOT / "docs" / "releases"
+        readiness = (release_directory / "v1.0.0-readiness.md").read_text(encoding="utf-8")
+        publication = (release_directory / "1.0.0-publication.md").read_text(encoding="utf-8")
+        self.assertIn("1.0.0-publication.md", readiness)
+        self.assertIn("v1.0.0-readiness.md", publication)
+        self.assertIn("not ready and not authorized for publication", readiness)
+
+        version = current_plugin_version()
+        self.assertIn(f"Version {version} publication record", publication)
+        self.assertIn(f"releases/tag/{version}", publication)
+
+    def test_current_documents_do_not_describe_published_manifests_as_unpublished(self) -> None:
+        historical = REPOSITORY_ROOT / "docs" / "releases" / "v1.0.0-readiness.md"
+        stale_patterns = (
+            "not yet a published 1.0 release",
+            "after these files are published",
+            "the unpublished remote command",
+            "remote `owner/repo` registration remains untested until publication",
+        )
+        for source in documentation_files():
+            if source == historical:
+                continue
+            content = source.read_text(encoding="utf-8").lower()
+            with self.subTest(source=source.relative_to(REPOSITORY_ROOT)):
+                for pattern in stale_patterns:
+                    self.assertNotIn(pattern, content)
+
+    def test_architecture_documents_current_distribution_paths(self) -> None:
+        required_paths = {
+            ".agents/skills/",
+            ".agents/plugins/marketplace.json",
+            ".github/plugin/marketplace.json",
+            ".claude-plugin/marketplace.json",
+            "plugins/agentic-engineering/",
+        }
+        for name in ("docs/architecture.md", "docs/distribution-architecture.md"):
+            content = (REPOSITORY_ROOT / name).read_text(encoding="utf-8")
+            with self.subTest(document=name):
+                for path in required_paths:
+                    self.assertIn(path, content)
 
     def test_fenced_example_is_not_a_heading_anchor(self) -> None:
         example_only = "[jump](#ghost)\n\n```markdown\n# Ghost\n```\n"

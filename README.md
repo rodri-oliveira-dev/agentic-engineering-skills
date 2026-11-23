@@ -4,100 +4,101 @@
 
 [![Validate skills](https://github.com/rodri-oliveira-dev/agentic-engineering-skills/actions/workflows/validate-skills.yml/badge.svg)](https://github.com/rodri-oliveira-dev/agentic-engineering-skills/actions/workflows/validate-skills.yml)
 
-A free, open source library of reusable software-engineering workflows for agents. Each skill has a narrow responsibility, explicit activation boundaries, safe failure behavior, and reviewable instructions. The vendor-neutral source lives only in `.agents/skills/`; OpenAI Codex is the priority platform.
+A free, open source library of ten reusable software-engineering workflows for agents. The vendor-neutral, canonical source lives only in `.agents/skills/`; generated marketplace packages are derived from it. OpenAI Codex is the priority platform.
 
-Structural compatibility does not prove behavioral quality. The repository validates files and scenarios offline, while live-agent results are recorded separately and are currently pending.
+Version [`1.0.0`](https://github.com/rodri-oliveira-dev/agentic-engineering-skills/releases/tag/1.0.0) is published. Publication and structural validation do not prove live-agent behavior; see the [publication record](docs/releases/1.0.0-publication.md) for the exact evidence and remaining limitations.
 
-## Skill catalog
+## Quick installation
 
-- `api-design`: design or evolve API and integration contracts.
-- `code-review`: review changes for evidence-backed, actionable defects.
-- `commits`: prepare, organize, review, or create focused Git commits.
-- `debug`: investigate observed failures through controlled diagnostics.
-- `deployment-readiness`: assess readiness for a controlled deployment without deploying.
-- `docs`: create, review, or update technical software documentation.
-- `refactor`: improve maintainability while preserving observable behavior.
-- `security-review`: perform authorized defensive security reviews.
-- `sql`: develop and review relational SQL and safe schema evolution.
-- `testing`: plan, implement, run, or assess automated tests.
-
-Each canonical directory contains `SKILL.md` and, where useful, focused `references/` loaded only when needed.
-
-## Quick start
-
-Repository tooling requires Python 3.11 or newer. The validator uses the pinned PyYAML dependency; the installer and remaining tooling use the standard library.
-
-```shell
-git clone https://github.com/rodri-oliveira-dev/agentic-engineering-skills.git
-cd agentic-engineering-skills
-python -m venv .venv
-```
-
-Use the virtual environment's interpreter for dependency installation and validation.
-
-Linux and macOS:
-
-```shell
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python scripts/validate_skills.py --require-skills
-.venv/bin/python -m unittest discover -s tests -v
-.venv/bin/python scripts/evaluate_scenarios.py check
-```
-
-Windows PowerShell:
-
-```powershell
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe scripts/validate_skills.py --require-skills
-.venv\Scripts\python.exe -m unittest discover -s tests -v
-.venv\Scripts\python.exe scripts/evaluate_scenarios.py check
-```
-
-Activation commands are platform features, not repository CLI options:
-
-- **Codex:** use the checked-in `.agents/skills/` catalog directly, or copy complete selected skill directories to another repository. See the [Codex guide](docs/platforms/codex.md).
-- **GitHub Copilot:** use the same canonical project directory; GitHub CLI also offers a public-preview installation workflow. See the [Copilot guide](docs/platforms/github-copilot.md).
-- **Claude Code:** preview and create a managed `.claude/skills/` distribution with the included installer:
-
-  ```shell
-  python scripts/install_skills.py --platform claude-code --destination .claude/skills --all --dry-run
-  python scripts/install_skills.py --platform claude-code --destination .claude/skills --all
-  ```
-
-  See the [Claude Code guide](docs/platforms/claude-code.md) before choosing an explicit project or user destination.
-
-The cross-agent `skills` CLI can also discover all ten canonical skills directly from this repository without using the generated plugin package:
+The cross-agent `skills` CLI can list the catalog without installing it:
 
 ```shell
 npx skills add rodri-oliveira-dev/agentic-engineering-skills --list
 ```
 
-Use its `--skill <name>` or `--all` option only after reviewing the listed skills and the destination agents.
-
-For agent selection, individual installation, updates, removal, and the three native marketplaces, follow the [distribution and installation guide](docs/distribution.md). Remote marketplace commands apply after the manifests are published on the repository's default branch.
-
-For marketplace distribution, the repository also provides one generated Agent Plugins 1.0 package containing all ten skills. Regenerate and verify it without a package manager:
+Install one skill and select its target agents interactively:
 
 ```shell
-python scripts/package_plugins.py generate
-python scripts/package_plugins.py check
-python scripts/package_plugins.py verify
+npx skills add rodri-oliveira-dev/agentic-engineering-skills --skill code-review
 ```
 
-The generated `plugins/agentic-engineering/skills/` tree is reviewable distribution output; edit only `.agents/skills/`. See [Plugin distribution architecture](docs/distribution-architecture.md) for the marketplace manifests, compatibility decisions, and versioning strategy.
+Install all ten skills for all detected agents only after reviewing the source and destinations:
 
-## Updating
+```shell
+npx skills add rodri-oliveira-dev/agentic-engineering-skills --all
+```
 
-Update this checkout with Git only after preserving or committing local work, then rerun validation. Codex and Copilot use this repository immediately when operating here. For a managed Claude Code installation, rerun the same installer command; it updates unchanged managed files and refuses to overwrite unmanaged or locally modified content. Manual copies must be reviewed and replaced manually.
+This route requires Node.js with `npx`, not Python. For explicit agent selection, marketplace installation, updates, removal, standalone copies, and verified status, use the [installation and distribution guide](docs/distribution.md).
 
-## Validation and compatibility
+## Supported agents and distribution methods
 
-Automated checks cover the ten-skill structure, metadata, safe local references, catalog integrity, installer updates and removals, overwrite prevention, invalid input, validator regressions, scenario coverage, and documentation links. They require no credentials, paid service, or network access and never execute commands from skills.
+| Method | What is available | Verified status |
+| --- | --- | --- |
+| Universal `npx skills` | One skill, selected skills, or all skills for selected agents | Local and remote catalog listing validated with CLI `1.9.0`; mutating installation is not recorded |
+| OpenAI Codex marketplace | The complete `agentic-engineering` plugin | Public repository registration, listing, and isolated installation validated with Codex CLI `0.171.0-alpha.13`; live activation not tested |
+| GitHub Copilot CLI marketplace | The complete plugin | Published and structurally validated; CLI installation and behavior not tested |
+| Claude Code marketplace | The complete plugin | Published and structurally validated; CLI installation and behavior not tested |
+| Standalone project installation | Canonical `.agents/skills/` for Codex/Copilot; managed `.claude/skills/` copy for Claude Code | Repository structure and the Claude installer are tested without launching an agent |
 
-Live model discovery, activation, refusal, and output quality are different evidence. See [Validation and testing](docs/validation.md), the [compatibility matrix](docs/platforms/compatibility-matrix.md), and [v1.0.0 readiness](docs/releases/v1.0.0-readiness.md) for the exact boundary.
+The three marketplace manifests are publicly available on `main`. A manifest's existence means **published**, repository checks can mean **structurally validated**, a successful client operation means **installation validated**, and a controlled live-agent run is required for **behavioral validation**. Do not infer one state from another.
+
+Platform guides: [Codex](docs/platforms/codex.md), [GitHub Copilot](docs/platforms/github-copilot.md), [Claude Code](docs/platforms/claude-code.md), and the [compatibility matrix](docs/platforms/compatibility-matrix.md).
+
+## Skill catalog
+
+- [`api-design`](.agents/skills/api-design/SKILL.md): design or evolve API and integration contracts.
+- [`code-review`](.agents/skills/code-review/SKILL.md): review changes for evidence-backed, actionable defects.
+- [`commits`](.agents/skills/commits/SKILL.md): prepare, organize, review, or create focused Git commits.
+- [`debug`](.agents/skills/debug/SKILL.md): investigate observed failures through controlled diagnostics.
+- [`deployment-readiness`](.agents/skills/deployment-readiness/SKILL.md): assess readiness for a controlled deployment without deploying.
+- [`docs`](.agents/skills/docs/SKILL.md): create, review, or update technical software documentation.
+- [`refactor`](.agents/skills/refactor/SKILL.md): improve maintainability while preserving observable behavior.
+- [`security-review`](.agents/skills/security-review/SKILL.md): perform authorized defensive security reviews.
+- [`sql`](.agents/skills/sql/SKILL.md): develop and review relational SQL and safe schema evolution.
+- [`testing`](.agents/skills/testing/SKILL.md): plan, implement, run, or assess automated tests.
+
+Each canonical directory contains `SKILL.md` and, where useful, focused `references/` loaded only when needed.
+
+## Platform compatibility and validation
+
+Automated checks cover structure, metadata, local references, catalog integrity, installer safety, deterministic package generation, embedded hashes, scenario coverage, and documentation links. They do not execute skill instructions or evaluate model output. No completed behavioral evaluation record is currently stored in the repository.
+
+See [Validation and testing](docs/validation.md), the [compatibility matrix](docs/platforms/compatibility-matrix.md), the historical [v1.0.0 readiness assessment](docs/releases/v1.0.0-readiness.md), and the factual [v1.0.0 publication record](docs/releases/1.0.0-publication.md).
+
+## Development and testing
+
+Python 3.11 or newer and the pinned PyYAML dependency are required to develop and validate this repository; they are not requirements for every installation method.
+
+Linux and macOS:
+
+```shell
+python -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m unittest discover -s tests -v
+.venv/bin/python scripts/validate_skills.py --require-skills
+.venv/bin/python scripts/evaluate_scenarios.py check
+.venv/bin/python scripts/package_plugins.py check
+.venv/bin/python scripts/package_plugins.py verify
+```
+
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m unittest discover -s tests -v
+.venv\Scripts\python.exe scripts/validate_skills.py --require-skills
+.venv\Scripts\python.exe scripts/evaluate_scenarios.py check
+.venv\Scripts\python.exe scripts/package_plugins.py check
+.venv\Scripts\python.exe scripts/package_plugins.py verify
+```
+
+Edit only `.agents/skills/`. Regenerate marketplace output only when canonical skill content or package metadata changes; documentation-only changes do not require regeneration. See [Plugin distribution architecture](docs/distribution-architecture.md).
 
 ## Contributing and security
 
-Read [Contributing](CONTRIBUTING.md) and the [skill authoring contract](docs/skill-authoring.md), add focused tests, and report only checks actually run. Report vulnerabilities privately according to the [security policy](SECURITY.md). The project is licensed under the [MIT License](LICENSE); known dependency and attribution information is in [third-party notices](THIRD_PARTY_NOTICES.md).
+Read [Contributing](CONTRIBUTING.md) and the [skill authoring contract](docs/skill-authoring.md), add focused evidence, and report only checks actually run. Report vulnerabilities privately according to the [security policy](SECURITY.md).
 
-Additional documentation: [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), and [platform guides](docs/platforms/compatibility-matrix.md).
+## License and additional documentation
+
+The project is licensed under the [MIT License](LICENSE). Known dependency and attribution information is in [third-party notices](THIRD_PARTY_NOTICES.md). Additional documentation includes the [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), and [distribution architecture](docs/distribution-architecture.md).

@@ -4,14 +4,23 @@ The repository validator checks structural conformance and selected maintainabil
 
 ## Setup and commands
 
-Install the declared dependency in a virtual environment:
+Install the declared dependency with the virtual environment's interpreter.
+
+Linux and macOS:
 
 ```shell
 python -m venv .venv
-python -m pip install -r requirements.txt
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
-Activate the environment using the command appropriate for the operating system, then validate the required canonical catalog:
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+Activation is optional. In the commands below, `python` means the selected virtual-environment interpreter (`.venv/bin/python` or `.venv\Scripts\python.exe`). Validate the required canonical catalog:
 
 ```shell
 python scripts/validate_skills.py --require-skills
@@ -58,6 +67,14 @@ python scripts/package_plugins.py verify
 These commands are intentionally shell-neutral. The `Validate skills` GitHub Actions workflow runs the automated test suite, required-catalog validation, generated-distribution reconstruction, and embedded package-inventory verification for pull requests to `main`, pushes to `main`, and manual dispatches. Its minimal compatibility matrix uses Ubuntu with Python 3.11 (the minimum supported runtime) and Windows with Python 3.13. This gives the installer and path-safety code both POSIX and Windows coverage without multiplying every supported Python and operating-system combination. macOS remains a manual compatibility target.
 
 The workflow grants the token read-only repository-content access, uses no secrets, and pins official actions to the full commit SHA corresponding to `actions/checkout@v7.0.1` and `actions/setup-python@v7.1.0`. Its checkout does not persist credentials. Because the repository now has implemented skills, CI uses `--require-skills` and fails if the canonical catalog is absent or empty.
+
+## Release and installation evidence
+
+GitHub Actions run [`45163692742`](https://github.com/rodri-oliveira-dev/agentic-engineering-skills/actions/runs/45163692742) passed for the exact `1.0.0` release commit `ff09a436cd1a295f617526bfe0e6d712962ecac8` on Linux/Python 3.11 and Windows/Python 3.13. It ran unit and regression tests, structural skill validation, deterministic package reconstruction and embedded-hash verification, and behavioral-scenario consistency checks. It did not execute an agent or complete the behavioral scenarios.
+
+Separately, the universal `skills` CLI `1.9.0` listed the ten-skill catalog from both a local checkout and the public repository without installing it. Codex CLI `0.171.0-alpha.13` registered the public marketplace and installed plugin version `1.0.0` into an isolated temporary `CODEX_HOME`. These are local CLI discovery and installation results, not live model discovery, activation, or behavioral evaluation. Copilot CLI and Claude Code were unavailable, so their remote marketplace workflows remain unverified.
+
+The [Version 1.0.0 publication record](releases/1.0.0-publication.md) separates these facts from the unmet criteria in the historical readiness assessment.
 
 ## Results and exit codes
 
