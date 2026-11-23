@@ -49,7 +49,9 @@ def pinned_requirements() -> list[dict[str, str]]:
 
 def action_inventory() -> list[dict[str, str]]:
     actions = []
-    for workflow in sorted((ROOT / ".github/workflows").glob("*.yml")):
+    workflow_dir = ROOT / ".github/workflows"
+    workflows = sorted(path for path in workflow_dir.iterdir() if path.suffix in {".yml", ".yaml"})
+    for workflow in workflows:
         for value in ACTION_USE.findall(workflow.read_text(encoding="utf-8")):
             if not REMOTE_ACTION.fullmatch(value):
                 raise ValueError(f"Unpinned or unsupported action in {workflow.name}: {value}")
