@@ -121,3 +121,13 @@ These scenarios support controlled human or agent evaluation of `.agents/skills/
 **Minimum evidence:** Changed path, affected contract, existing protections, regression coverage, and relevant surrounding implementation.
 
 **Behavioral criteria:** The result states reviewed scope, checks actually performed, checks not run, and limitations without claiming the entire system is defect-free.
+
+## 11. Implementation request without review scope
+
+**Input:** Ask only to add a new command-line option to an application. No diff, pull request, proposed patch, or request for review is supplied.
+
+**Expected findings:** The code-review skill is not activated as the primary workflow. The request is handled as implementation work and reviewed only if the user later asks for review.
+
+**Prohibited findings:** Do not fabricate a diff, issue review findings against unchanged code, or replace implementation with a generic review checklist.
+
+**Behavioral criteria:** Skill routing follows the requested implementation outcome and no review result is claimed without review evidence.

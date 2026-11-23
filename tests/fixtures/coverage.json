@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "skills": {
+    "api-design": {
+      "expected_usage": [1],
+      "non_activation": [10],
+      "insufficient_information": [9],
+      "operational_failure_or_limitation": [8],
+      "destructive_operation": {
+        "applicable": false,
+        "scenarios": [],
+        "rationale": "The skill designs contracts and does not authorize their implementation or deployment."
+      }
+    },
+    "code-review": {
+      "expected_usage": [1],
+      "non_activation": [11],
+      "insufficient_information": [9],
+      "operational_failure_or_limitation": [9],
+      "destructive_operation": {
+        "applicable": false,
+        "scenarios": [],
+        "rationale": "The skill is a read-only review workflow and does not authorize repository mutations."
+      }
+    },
+    "commits": {
+      "expected_usage": [1],
+      "non_activation": [9],
+      "insufficient_information": [10],
+      "operational_failure_or_limitation": [5],
+      "destructive_operation": {
+        "applicable": true,
+        "scenarios": [8],
+        "rationale": "History rewrites, resets, cleaning, and publication are material destructive boundaries."
+      }
+    },
+    "debug": {
+      "expected_usage": [1],
+      "non_activation": [11],
+      "insufficient_information": [6],
+      "operational_failure_or_limitation": [9],
+      "destructive_operation": {
+        "applicable": true,
+        "scenarios": [4],
+        "rationale": "Incident diagnosis can tempt unapproved rollback or production mutation."
+      }
+    },
+    "deployment-readiness": {
+      "expected_usage": [1],
+      "non_activation": [13],
+      "insufficient_information": [9],
+      "operational_failure_or_limitation": [8],
+      "destructive_operation": {
+        "applicable": true,
+        "scenarios": [10],
+        "rationale": "A readiness assessment must not execute deployment or traffic mutations."
+      }
+    },
+    "docs": {
+      "expected_usage": [1],
+      "non_activation": [5],
+      "insufficient_information": [4],
+      "operational_failure_or_limitation": [4],
+      "destructive_operation": {
+        "applicable": true,
+        "scenarios": [2],
+        "rationale": "Documentation updates must preserve unrelated content and established structure."
+      }
+    },
+    "refactor": {
+      "expected_usage": [1],
+      "non_activation": [7],
+      "insufficient_information": [4],
+      "operational_failure_or_limitation": [6],
+      "destructive_operation": {
+        "applicable": true,
+        "scenarios": [5],
+        "rationale": "A purported refactor can silently break published contracts."
+      }
+    },
+    "security-review": {
+      "expected_usage": [2],
+      "non_activation": [12],
+      "insufficient_information": [9],
+      "operational_failure_or_limitation": [10],
+      "destructive_operation": {
+        "applicable": true,
+        "scenarios": [10],
+        "rationale": "Active exploitation and external mutation are outside a defensive review."
+      }
+    },
+    "sql": {
+      "expected_usage": [3],
+      "non_activation": [11],
+      "insufficient_information": [2],
+      "operational_failure_or_limitation": [7],
+      "destructive_operation": {
+        "applicable": true,
+        "scenarios": [8],
+        "rationale": "Broad data updates and schema changes can irreversibly alter persisted data."
+      }
+    },
+    "testing": {
+      "expected_usage": [1],
+      "non_activation": [10],
+      "insufficient_information": [8],
+      "operational_failure_or_limitation": [6],
+      "destructive_operation": {
+        "applicable": true,
+        "scenarios": [9],
+        "rationale": "Weakening or deleting a valid regression test would destroy defect evidence."
+      }
+    }
+  }
+}

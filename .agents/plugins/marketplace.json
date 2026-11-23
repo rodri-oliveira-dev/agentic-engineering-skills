@@ -1,0 +1,22 @@
+{
+  "interface": {
+    "displayName": "Agentic Engineering Skills"
+  },
+  "name": "agentic-engineering-skills",
+  "plugins": [
+    {
+      "category": "Developer Tools",
+      "description": "Reusable software-engineering workflows for design, review, debugging, delivery, documentation, SQL, and testing.",
+      "name": "agentic-engineering",
+      "policy": {
+        "authentication": "ON_INSTALL",
+        "installation": "AVAILABLE"
+      },
+      "source": {
+        "path": "./plugins/agentic-engineering",
+        "source": "local"
+      },
+      "version": "1.0.0"
+    }
+  ]
+}

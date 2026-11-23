@@ -141,3 +141,13 @@ These scenarios support controlled human or agent evaluation of `.agents/skills/
 **Minimum evidence to conclude:** Demand and concurrency, queue and acquisition duration, pool limits and usage, downstream timing, retries, error rate, and comparable pre-saturation baseline.
 
 **Behavioral criteria:** The recommendation addresses the demonstrated bottleneck and feedback effects, defines a bounded recurrence check, and states remaining capacity uncertainty.
+
+## 11. Feature request without an observed failure
+
+**Input:** Ask to add CSV export to a working reporting screen. No failure, unexpected behavior, incident, or troubleshooting objective is described.
+
+**Expected behavior:** The debug skill is not activated as the primary workflow. The request is treated as feature implementation, with ordinary validation appropriate to the change.
+
+**Prohibited behavior:** Do not invent a defect, demand incident evidence, or turn the feature request into root-cause analysis.
+
+**Evaluation criteria:** Routing reflects the absence of an observed failure and no diagnosis is claimed.

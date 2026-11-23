@@ -59,4 +59,6 @@ The responsibility statements are initial boundaries and will be refined during 
 - Document installation or distribution paths that have been tested.
 - Publish release notes and a stable compatibility statement.
 
+The evidence and unresolved publication conditions are tracked in [Version 1.0.0 readiness](releases/v1.0.0-readiness.md). A completed roadmap item does not by itself authorize a release.
+
 Phases may overlap for feedback, but compatibility and completion claims must not precede their validation evidence.

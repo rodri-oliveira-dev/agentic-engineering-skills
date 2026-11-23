@@ -224,6 +224,50 @@ class InstallerTests(unittest.TestCase):
 
         self.assertEqual("keep me\n", outside.read_text(encoding="utf-8"))
 
+    def test_rejects_duplicate_manifest_keys(self) -> None:
+        write_skill(self.catalog, "testing")
+        self.destination.mkdir(parents=True)
+        manifest = (
+            '{"schema_version":1,"schema_version":1,'
+            '"managed_by":"agentic-engineering-skills",'
+            '"platform":"claude-code","skills":{}}'
+        )
+        (self.destination / MANIFEST_NAME).write_text(manifest, encoding="utf-8")
+
+        with self.assertRaisesRegex(InstallError, "duplicate key"):
+            self.install()
+
+        self.assertFalse((self.destination / "testing").exists())
+
+    def test_rejects_reserved_skill_name_in_manifest(self) -> None:
+        write_skill(self.catalog, "testing")
+        self.destination.mkdir(parents=True)
+        manifest = {
+            "schema_version": 1,
+            "managed_by": "agentic-engineering-skills",
+            "platform": "claude-code",
+            "skills": {"synced": {"files": {}}},
+        }
+        (self.destination / MANIFEST_NAME).write_text(json.dumps(manifest), encoding="utf-8")
+
+        with self.assertRaisesRegex(InstallError, "reserved by Claude Code"):
+            self.install()
+
+        self.assertFalse((self.destination / "testing").exists())
+
+    def test_rejects_invalid_manifest_without_modifying_destination(self) -> None:
+        write_skill(self.catalog, "testing")
+        self.destination.mkdir(parents=True)
+        marker = self.destination / "keep.txt"
+        marker.write_text("keep\n", encoding="utf-8")
+        (self.destination / MANIFEST_NAME).write_text("not-json", encoding="utf-8")
+
+        with self.assertRaisesRegex(InstallError, "cannot read managed manifest"):
+            self.install()
+
+        self.assertEqual("keep\n", marker.read_text(encoding="utf-8"))
+        self.assertFalse((self.destination / "testing").exists())
+
     def test_refuses_broken_symlink_at_an_unmanaged_skill_path(self) -> None:
         write_skill(self.catalog, "testing")
         self.destination.mkdir(parents=True)
@@ -237,6 +281,100 @@ class InstallerTests(unittest.TestCase):
             self.install()
 
         self.assertTrue(link.is_symlink())
+
+    def test_rejects_symlinked_source_content_before_writing(self) -> None:
+        skill = write_skill(self.catalog, "testing")
+        target = skill / "details.txt"
+        target.write_text("details\n", encoding="utf-8")
+        link = skill / "alias.txt"
+        try:
+            link.symlink_to(target)
+        except OSError as exc:
+            self.skipTest(f"file symlinks are unavailable: {exc}")
+
+        with self.assertRaisesRegex(InstallError, "source skill contains a symlinked file"):
+            self.install()
+
+        self.assertFalse(self.destination.exists())
+
+    def test_rejects_a_symlinked_source_catalog(self) -> None:
+        write_skill(self.catalog, "testing")
+        linked_catalog = self.root / "linked-catalog"
+        try:
+            linked_catalog.symlink_to(self.catalog, target_is_directory=True)
+        except OSError as exc:
+            self.skipTest(f"directory symlinks are unavailable: {exc}")
+
+        with self.assertRaisesRegex(InstallError, "catalog must not be a symlink"):
+            install_skills(
+                catalog=linked_catalog,
+                destination=self.destination,
+                platform="claude-code",
+                selected_skill=None,
+            )
+
+        self.assertFalse(self.destination.exists())
+
+    def test_rejects_a_symlinked_skill_in_source_catalog(self) -> None:
+        write_skill(self.catalog, "testing")
+        outside_skill = write_skill(self.root / "outside", "linked-skill")
+        linked_skill = self.catalog / "linked-skill"
+        try:
+            linked_skill.symlink_to(outside_skill, target_is_directory=True)
+        except OSError as exc:
+            self.skipTest(f"directory symlinks are unavailable: {exc}")
+
+        with self.assertRaisesRegex(InstallError, "catalog contains a symlink"):
+            self.install()
+
+        self.assertFalse(self.destination.exists())
+
+    def test_rejects_a_non_skill_source_catalog_entry(self) -> None:
+        write_skill(self.catalog, "testing")
+        (self.catalog / "README.md").write_text("unexpected\n", encoding="utf-8")
+
+        with self.assertRaisesRegex(InstallError, "catalog contains a non-skill entry"):
+            self.install()
+
+        self.assertFalse(self.destination.exists())
+
+    def test_rejects_a_symlinked_install_destination(self) -> None:
+        write_skill(self.catalog, "testing")
+        real_destination = self.root / "real-destination"
+        real_destination.mkdir()
+        link = self.root / "linked-destination"
+        try:
+            link.symlink_to(real_destination, target_is_directory=True)
+        except OSError as exc:
+            self.skipTest(f"directory symlinks are unavailable: {exc}")
+
+        with self.assertRaisesRegex(InstallError, "destination must not be a symlink"):
+            install_skills(
+                catalog=self.catalog,
+                destination=link,
+                platform="claude-code",
+                selected_skill=None,
+            )
+
+        self.assertEqual([], list(real_destination.iterdir()))
+
+    def test_rejects_a_symlinked_uninstall_destination(self) -> None:
+        write_skill(self.catalog, "testing")
+        self.install()
+        link = self.root / "linked-destination"
+        try:
+            link.symlink_to(self.destination, target_is_directory=True)
+        except OSError as exc:
+            self.skipTest(f"directory symlinks are unavailable: {exc}")
+
+        with self.assertRaisesRegex(InstallError, "destination must not be a symlink"):
+            uninstall_skills(
+                destination=link,
+                platform="claude-code",
+                selected_skill=None,
+            )
+
+        self.assertTrue((self.destination / "testing/SKILL.md").is_file())
 
     def test_uninstalls_only_selected_intact_skill(self) -> None:
         write_skill(self.catalog, "code-review")
@@ -397,6 +535,30 @@ class InstallerCliTests(unittest.TestCase):
 
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertIn("Would create: testing/SKILL.md", result.stdout)
+            self.assertFalse(destination.exists())
+
+    def test_cli_rejects_unsupported_platform_without_writing(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "skills"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPTS_DIRECTORY / "install_skills.py"),
+                    "--platform",
+                    "unknown-agent",
+                    "--destination",
+                    str(destination),
+                    "--all",
+                ],
+                cwd=REPOSITORY_ROOT,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                check=False,
+            )
+
+            self.assertEqual(2, result.returncode)
+            self.assertIn("invalid choice", result.stderr)
             self.assertFalse(destination.exists())
 
 

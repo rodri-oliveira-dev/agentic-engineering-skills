@@ -30,6 +30,7 @@ INLINE_LINK = re.compile(
 REFERENCE_LINK = re.compile(r"^\s{0,3}\[[^\]]+\]:\s*(?:<(?P<angle>[^>]+)>|(?P<plain>\S+))", re.MULTILINE)
 FENCE_START = re.compile(r"^ {0,3}(?P<fence>`{3,}|~{3,}).*$")
 EXTERNAL_SCHEMES = {"http", "https", "mailto"}
+ALLOWED_CATALOG_FILES = {".agentic-engineering-skills.json"}
 
 
 class UniqueKeyLoader(yaml.SafeLoader):
@@ -309,21 +310,29 @@ def _markdown_files(skill_dir: Path, issues: list[Issue]) -> Iterable[Path]:
         safe_directories: list[str] = []
         for directory in directories:
             candidate = current_path / directory
-            resolved = candidate.resolve()
-            if candidate.is_symlink() and not _is_within(resolved, boundary):
+            if candidate.is_symlink():
                 _issue(
                     issues,
                     "error",
                     "security",
                     candidate,
-                    "symlinked directory escapes the skill directory",
+                    "symlinked directories are not allowed in a distributable skill",
                 )
-            elif not candidate.is_symlink():
+            else:
                 safe_directories.append(directory)
         directories[:] = safe_directories
 
         for filename in files:
             candidate = current_path / filename
+            if candidate.is_symlink():
+                _issue(
+                    issues,
+                    "error",
+                    "security",
+                    candidate,
+                    "symlinked files are not allowed in a distributable skill",
+                )
+                continue
             resolved = candidate.resolve()
             if not _is_within(resolved, boundary):
                 _issue(
@@ -415,7 +424,7 @@ def _validate_local_links(skill_dir: Path, issues: list[Issue]) -> None:
             except ValueError as exc:
                 _issue(issues, "error", "structure", markdown_file, f"invalid link target {target!r}: {exc}")
                 continue
-            if parsed.scheme.lower() in EXTERNAL_SCHEMES or parsed.netloc:
+            if parsed.scheme.lower() in EXTERNAL_SCHEMES:
                 continue
             if parsed.scheme:
                 if parsed.scheme.lower() == "file" or len(parsed.scheme) == 1:
@@ -426,6 +435,16 @@ def _validate_local_links(skill_dir: Path, issues: list[Issue]) -> None:
                         markdown_file,
                         f"local link must be relative, not absolute: {target!r}",
                     )
+                else:
+                    _issue(
+                        issues,
+                        "error",
+                        "security",
+                        markdown_file,
+                        f"link uses an unsupported URI scheme: {target!r}",
+                    )
+                continue
+            if parsed.netloc:
                 continue
 
             local_part = unquote(parsed.path)
@@ -493,6 +512,15 @@ def validate_skill(skill_dir: Path, catalog_root: Path) -> SkillResult:
             "missing required file SKILL.md",
         )
         return result
+    if skill_md.is_symlink():
+        _issue(
+            result.issues,
+            "error",
+            "security",
+            skill_md,
+            "SKILL.md must be a regular file, not a symlink",
+        )
+        return result
     if not _is_within(skill_md.resolve(), resolved_dir):
         _issue(
             result.issues,
@@ -513,6 +541,17 @@ def validate_skill(skill_dir: Path, catalog_root: Path) -> SkillResult:
 def validate_catalog(
     catalog_root: Path, selected_skill: str | None = None, require_skills: bool = False
 ) -> CatalogReport:
+    if catalog_root.is_symlink():
+        root = catalog_root.absolute()
+        report = CatalogReport(root=root)
+        _issue(
+            report.catalog_issues,
+            "error",
+            "security",
+            root,
+            "catalog root must be a regular directory, not a symlink",
+        )
+        return report
     root = catalog_root.resolve()
     report = CatalogReport(root=root)
 
@@ -541,7 +580,29 @@ def validate_catalog(
         _issue(report.catalog_issues, "error", "structure", root, "catalog root is not a directory")
         return report
     else:
-        candidates = sorted((path for path in root.iterdir() if path.is_dir()), key=lambda path: path.name)
+        entries = sorted(root.iterdir(), key=lambda path: path.name)
+        candidates: list[Path] = []
+        for path in entries:
+            if path.is_symlink():
+                _issue(
+                    report.catalog_issues,
+                    "error",
+                    "security",
+                    path,
+                    "catalog entries must be regular skill directories, not symlinks",
+                )
+            elif path.is_dir():
+                candidates.append(path)
+            elif path.name in ALLOWED_CATALOG_FILES and path.is_file():
+                continue
+            else:
+                _issue(
+                    report.catalog_issues,
+                    "error",
+                    "structure",
+                    path,
+                    "unexpected catalog entry; only skill directories are allowed",
+                )
         if selected_skill is not None:
             candidates = [path for path in candidates if path.name == selected_skill]
             if not candidates:

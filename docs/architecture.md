@@ -2,7 +2,7 @@
 
 ## Purpose and principles
 
-Agentic Engineering Skills will provide reusable, inspectable workflows for software-engineering agents. Its architecture favors an open contract, a single canonical source, small cohesive skills, progressive disclosure, explicit validation, and safe operation.
+Agentic Engineering Skills provides reusable, inspectable workflows for software-engineering agents. Its architecture favors an open contract, a single canonical source, small cohesive skills, progressive disclosure, explicit validation, and safe operation.
 
 The design follows these principles:
 
@@ -15,20 +15,23 @@ The design follows these principles:
 
 ## Repository organization
 
-The target organization is:
+The repository organization is:
 
 ```text
 .
 ├── .agents/
 │   └── skills/          # Canonical skill directories
-├── docs/                # Architecture, authoring contract, and roadmap
-├── scripts/             # Repository-level validation tooling
+├── docs/                # Architecture, platform guides, validation, and release readiness
+├── scripts/             # Validation, evaluation-record, and distribution tooling
+├── plugins/             # Deterministic marketplace packages generated from canonical skills
 ├── tests/
 │   └── fixtures/        # Representative behavioral scenarios
 ├── .github/
 │   ├── ISSUE_TEMPLATE/  # Focused issue forms
 │   └── workflows/       # Continuous integration
 ├── CONTRIBUTING.md      # Contribution workflow and acceptance criteria
+├── SECURITY.md          # Private reporting and safe-research policy
+├── THIRD_PARTY_NOTICES.md
 ├── README.md            # Primary project overview in English
 ├── README.pt-BR.md      # Project overview in Brazilian Portuguese
 ├── .gitignore
@@ -40,6 +43,7 @@ Directories with no useful content are intentionally not committed. They will be
 Component responsibilities:
 
 - `.agents/skills/` is the only authoritative source for skill instructions and their optional resources.
+- `plugins/agentic-engineering/` is deterministic marketplace output generated from the canonical source, never an independently editable skill tree.
 - `docs/` records repository-wide decisions and conventions, not duplicated skill instructions.
 - `scripts/` contains repository validation tooling. A skill's own executable helpers belong inside that skill's optional `scripts/` directory.
 - `tests/` contains isolated structural and CLI checks without mixing test material into production skills.
@@ -62,7 +66,9 @@ The evidence level for each platform is recorded in the [platform compatibility 
 - **GitHub Copilot:** documents `.agents/skills/` as a supported project location. The canonical catalog has been audited and structurally validated against the shared format, so no adapter or `.github/skills/` copy is needed. Discovery, activation, and workflow behavior across intended Copilot surfaces remain unverified.
 - **Claude Code:** follows the Agent Skills standard and documents project discovery under `.claude/skills/`. The standard-library installer copies complete canonical skill directories into that location as a generated distribution, with a hash manifest that supports safe updates and rejects unmanaged conflicts. No Claude-specific frontmatter is added.
 
-Copilot does not require an adapter because it supports the canonical location. Claude Code's generated distribution is created only on demand and is ignored in this repository; `.agents/skills/` remains authoritative. Generated output must not be edited as source. The installer detects local edits through recorded hashes and stops instead of overwriting them.
+Copilot does not require an adapter for direct repository use because it supports the canonical location. Claude Code's standalone `.claude/skills/` distribution is created only on demand and is ignored in this repository; `.agents/skills/` remains authoritative. Generated output must not be edited as source. The installer detects local edits through recorded hashes and stops instead of overwriting them.
+
+Marketplace distribution adds one generated Agent Plugins 1.0 package for all ten skills. OpenAI and Copilot CLI use its portable root manifest; Claude Code uses a thin compatibility manifest over the same package. Host-specific marketplace catalogs all point to that package. The generation, integrity, versioning, and alternative packaging analysis is recorded in [Plugin distribution architecture](distribution-architecture.md).
 
 Vendor-specific metadata, invocation controls, dynamic context injection, UI configuration, or tool syntax must remain in optional adapters or overlays. They must not become requirements of the shared skill.
 
@@ -156,7 +162,7 @@ Review checks scope, specification conformance, project conventions, security bo
 
 ### Automated validation limits
 
-CI verifies Python tests and the structural validator on Ubuntu with Python 3.11. It checks YAML, metadata, catalog structure, duplicate names, local reference safety, and generated Claude distribution integrity without executing bundled skill scripts. It does not prove behavioral quality, external-link availability, Markdown fragment validity, or cross-platform agent behavior. Runtime claims require separate controlled evaluation and are recorded independently from structural compatibility.
+CI verifies Python tests, scenario coverage, and the structural validator on Ubuntu with Python 3.11 and Windows with Python 3.13. It checks YAML, metadata, catalog structure, duplicate names, local reference safety, documentation links, and generated Claude distribution integrity without executing bundled skill commands. It does not prove behavioral quality, external-link availability, or cross-platform agent behavior. Runtime claims require separate controlled evaluation and are recorded independently from structural compatibility.
 
 ## Official references considered
 
