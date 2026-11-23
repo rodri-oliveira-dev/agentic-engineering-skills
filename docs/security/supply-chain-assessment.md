@@ -45,7 +45,7 @@ The local audit environment and output directories are ignored by Git.
 
 ## Future release provenance
 
-For GitHub Releases published **after this workflow merges**, the release job requires a successful SCA/inventory job, checks out the release tag, verifies package integrity and exact version matching, builds a reproducible ZIP plus SHA-256 checksum, and requests an `actions/attest` build-provenance attestation for that ZIP. After the attestation succeeds, it uploads the ZIP and checksum as Release assets and retains an Actions artifact for 90 days. Only the release job receives `contents: write`, `id-token: write` and `attestations: write` permissions.
+For GitHub Releases published **after this workflow merges**, a read-only build job requires a successful SCA/inventory job, checks out the immutable event commit (`github.sha`), verifies package integrity and version matching, and builds a reproducible ZIP plus SHA-256 checksum. It stages the candidate as an immutable workflow artifact. A separate privileged job downloads that artifact by its ID, rejects artifact digest or checksum mismatches, verifies that the tag still resolves to the triggering commit, and requests an `actions/attest` build-provenance attestation before uploading the ZIP and checksum as Release assets. Only this isolated publishing job receives `contents: write`, `id-token: write` and `attestations: write`; it never checks out or executes repository-controlled Python scripts.
 
 Verify a downloaded archive:
 
@@ -55,7 +55,11 @@ gh attestation verify agentic-engineering-VERSION.zip --repo rodri-oliveira-dev/
 
 Also compare the archive's hash to the published `.sha256` file. The attestation binds the bytes to a future GitHub Actions run; it does not prove agent behavior. If the repository cannot issue attestations, the release job fails rather than silently publishing an unattested ZIP.
 
-Version `1.0.0` predates these controls and **has no project-built attested ZIP or project checksum**. The new workflow does not attest the historical release retroactively.
+The publishing job relies on GitHub-hosted `gh`, `jq` and `sha256sum` and on the repository's release/tag permissions. The attestation flow has **not been exercised by a real release** yet; the pull-request CI validates only the nonprivileged audit path and structural tests. Version `1.0.0` predates these controls and **has no project-built attested ZIP or project checksum**. The new workflow does not attest the historical release retroactively.
+
+## Repository administration required
+
+At the review date, the repository tag ruleset protects `refs/tags/v*`, whereas the released tag is `1.0.0` without `v`. Extend tag immutability protection to the actual tag naming convention (and future tags) in GitHub Settings before relying on stable tag identity. The branch ruleset currently requires the Linux/Windows validation checks but not the new `SCA, SBOM and provenance inventory` check. After this workflow is merged and a successful run exists on `main`, add that check to required status checks. Repository rulesets are administrative settings and are **not changed by this PR**.
 
 ## Manual review and residual risk
 
